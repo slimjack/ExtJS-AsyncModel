@@ -530,10 +530,7 @@
                 if (field.isModelField) {
                     result[field.name] = thisModelData[field.name].getRawData();
                 } else if (field.isStoreField) {
-                    result[field.name] = [];
-                    thisModelData[field.name].each(function(record) {
-                        result[field.name].push(record.getData());
-                    });
+                    result[field.name] = thisModelData[field.name].getRawData();
                 }
             }
         });

@@ -37,14 +37,14 @@ Ext.define('Ext.ux.data.AsyncStore', {
 
     },
 
-    //getData: function (options) {
-    //    var me = this;
-    //    var result = [];
-    //    me.each(function (record) {
-    //        result.push(record.getData(options));
-    //    });
-    //    return result;
-    //},
+    getRawData: function (options) {
+        var me = this;
+        var result = [];
+        me.each(function (record) {
+            result.push(record.getData(options));
+        });
+        return result;
+    },
 
     clear: function () {
         var me = this;
@@ -177,10 +177,6 @@ Ext.define('Ext.ux.data.AsyncStore', {
     afterMetaDataChange: function (record, modifiedFieldNames) {
         this.getData().itemChanged(record, modifiedFieldNames || null, undefined, Ext.data.Model.METACHANGE);
     },
-
-    //afterValidated: function (record, modifiedFieldNames) {
-    //    this.getData().itemChanged(record, modifiedFieldNames || null, undefined, Ext.data.Model.VALIDATED);
-    //},
 
     afterValidChange: function (record, modifiedFieldNames) {
         this.getData().itemChanged(record, modifiedFieldNames || null, undefined, Ext.data.Model.VALIDCHANGE);
