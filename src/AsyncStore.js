@@ -1,0 +1,190 @@
+﻿//Ext.ux.data.AsyncStore must be used only with Ext.ux.data.AsyncModel
+Ext.define('Ext.ux.data.AsyncStore', {
+    extend: 'Ext.data.Store',
+    selectionModel: null,
+    current: null,
+
+    constructor: function () {
+        var me = this;
+        me._validationCallbacks = [];
+        me._businessLogicSyncCallbacks = [];
+        me.callParent(arguments);
+        me.recordBusinessLogicCompletedCallback = function () {
+            me.onRecordBusinessLogicCompleted();
+        };
+    },
+
+    //region Public methods
+    applyModelConfig: function(config) {
+        var me = this;
+        me._modelConfig = config;
+        me.each(function (record) {
+            Ext.apply(record, config);
+        });
+    },
+
+    syncWithBusinessRules: function (callback) {
+        var me = this;
+        me.businessRulesSyncCounter = me.count();
+        me.each(function (record) {
+            record.syncWithBusinessRules(me.recordBusinessLogicCompletedCallback);
+        });
+        if (me.businessRulesSyncCounter === 0) {
+            Ext.callback(callback);
+        } else {
+            me._businessLogicSyncCallbacks.push(callback);
+        }
+
+    },
+
+    //getData: function (options) {
+    //    var me = this;
+    //    var result = [];
+    //    me.each(function (record) {
+    //        result.push(record.getData(options));
+    //    });
+    //    return result;
+    //},
+
+    clear: function () {
+        var me = this;
+        me.removeAll();
+        Ext.Array.erase(me._validationCallbacks, 0, me._validationCallbacks.length);
+    },
+
+    validate: function (validatePresence, callback) {
+        var me = this;
+        if (!validatePresence && me.isValidated()) {
+            Ext.callback(callback, null, [me.isValid()]);
+            return;
+        }
+        if (callback) {
+            me._validationCallbacks.push(callback);
+        }
+        if (me.isValidating) {
+            return;
+        }
+        var syncCounter = me.count();
+        var recordValidationCallback = function () {
+            syncCounter--;
+            if (syncCounter === 0) {
+                me.isValidating = false;
+                if (me.isValidated()) {
+                    me.onStoreValidated(me.isValid());
+                } else {
+                    me.validate(validatePresence);
+                }
+            }
+        };
+        if (syncCounter) {
+            me.isValidating = true;
+            me.each(function (record) {
+                record.validate(validatePresence, recordValidationCallback);
+            });
+        } else {
+            me.onStoreValidated(true);
+        }
+    },
+
+    resetMetaData: function() {
+        var me = this;
+        me.each(function (record) {
+            record.resetMetaData();
+        });
+    },
+
+    resetValidation: function () {
+        var me = this;
+        me.each(function (record) {
+            record.resetValidation();
+        });
+        Ext.Array.erase(me._validationCallbacks, 0, me._validationCallbacks.length);
+    },
+
+    isValidated: function () {
+        var me = this;
+        var isValidated = true;
+        me.each(function (record) {
+            isValidated = record.isValidated();
+            if (!isValidated) {
+                return false;
+            }
+        });
+        return isValidated;
+    },
+
+    isValid: function () {
+        var me = this;
+        var isValid = true;
+        me.each(function (record) {
+            isValid = record.isValid();
+            if (!isValid) {
+                return false;
+            }
+        });
+        return isValid;
+    },
+
+    getAllValidationInfo: function () {
+        var me = this;
+        var result = [];
+        me.each(function (record) {
+            result.push(record.getAllValidationInfo());
+        });
+        return result;
+    },
+    //endregion
+
+    //region Protected methods
+    onRecordBusinessLogicCompleted: function () {
+        var me = this;
+        me.businessRulesSyncCounter--;
+        if (me.businessRulesSyncCounter === 0) {
+            me.onBusinessLogicCompleted();
+
+        }
+    },
+
+    onBusinessLogicCompleted: function () {
+        var me = this;
+        Ext.each(me._businessLogicSyncCallbacks, function (businessLogicSyncCallback) {
+            Ext.callback(businessLogicSyncCallback);
+        });
+        Ext.Array.erase(me._businessLogicSyncCallbacks, 0, me._businessLogicSyncCallbacks.length);
+    },
+
+    onStoreValidated: function (isValid) {
+        var me = this;
+        Ext.each(me._validationCallbacks, function (validationCallback) {
+            Ext.callback(validationCallback, isValid);
+        });
+        Ext.Array.erase(me._validationCallbacks, 0, me._validationCallbacks.length);
+    },
+    //endregion
+
+    //region Overrides
+    createModel: function() {
+        var me = this;
+        var result = me.callParent(arguments);
+        if (me._modelConfig) {
+            Ext.apply(result, me._modelConfig);
+        }
+        return result;
+    },
+    //endregion
+
+    //region Private methods
+    afterMetaDataChange: function (record, modifiedFieldNames) {
+        this.getData().itemChanged(record, modifiedFieldNames || null, undefined, Ext.data.Model.METACHANGE);
+    },
+
+    //afterValidated: function (record, modifiedFieldNames) {
+    //    this.getData().itemChanged(record, modifiedFieldNames || null, undefined, Ext.data.Model.VALIDATED);
+    //},
+
+    afterValidChange: function (record, modifiedFieldNames) {
+        this.getData().itemChanged(record, modifiedFieldNames || null, undefined, Ext.data.Model.VALIDCHANGE);
+    }
+    //endregion
+
+});
