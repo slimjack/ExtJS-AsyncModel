@@ -48,7 +48,7 @@ Ext.define('Ext.ux.plugin.GridDataBinding', {
                 if (model instanceof Ext.ux.data.AsyncStore) {
                     me.bindStore(model);
                 } else {
-                    if (me._owner.storeSubFieldName) {
+                    if (me._owner.storeDataField) {
                         me.bindStore(model.get(me._owner.storeDataField));
                     }
                     me.bindModel(model);
@@ -71,7 +71,9 @@ Ext.define('Ext.ux.plugin.GridDataBinding', {
         var me = this;
         me.callParent(arguments);
         if (me._store) {
+            me._storebinding = true;
             me._owner.reconfigure(me._originalStore);
+            me._storebinding = false;
             me._store = null;
             me._originalStore = null;
         }

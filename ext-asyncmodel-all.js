@@ -221,8 +221,8 @@ Ext.define('Ext.ux.plugin.DataBinding', {
     onFormFieldBound: function (formField, model, modelFieldName) {},
     onFormFieldUnbound: function (formField, model, modelFieldName) { },
 
-    onBindableControldBound: function (control, model, modelFieldName) { },
-    onBindableControldUnbound: function (control, model, modelFieldName) { },
+    onBindableControlBound: function (control, model, modelFieldName) { },
+    onBindableControlUnbound: function (control, model, modelFieldName) { },
     //endregion
 
     //region Private methods
@@ -421,7 +421,7 @@ Ext.define('Ext.ux.plugin.DataBinding', {
             metaDataBinder.onComponentBound(bindableControl, model, modelFieldName);
             metaDataBinder.applyMetaData(bindableControl, model.getMeta(modelFieldName, metaDataName), model, modelFieldName);
         });
-        me.onBindableControldBound(bindableControl, model, modelFieldName);
+        me.onBindableControlBound(bindableControl, model, modelFieldName);
     },
 
     unbindBindableControl: function (bindableControl) {
@@ -662,7 +662,7 @@ Ext.define('Ext.ux.plugin.GridDataBinding', {
                 if (model instanceof Ext.ux.data.AsyncStore) {
                     me.bindStore(model);
                 } else {
-                    if (me._owner.storeSubFieldName) {
+                    if (me._owner.storeDataField) {
                         me.bindStore(model.get(me._owner.storeDataField));
                     }
                     me.bindModel(model);
@@ -685,7 +685,9 @@ Ext.define('Ext.ux.plugin.GridDataBinding', {
         var me = this;
         me.callParent(arguments);
         if (me._store) {
+            me._storebinding = true;
             me._owner.reconfigure(me._originalStore);
+            me._storebinding = false;
             me._store = null;
             me._originalStore = null;
         }
@@ -1543,10 +1545,7 @@ Ext.define('Ext.ux.data.AsyncModel', {
                 if (field.isModelField) {
                     result[field.name] = thisModelData[field.name].getRawData();
                 } else if (field.isStoreField) {
-                    result[field.name] = [];
-                    thisModelData[field.name].each(function(record) {
-                        result[field.name].push(record.getData());
-                    });
+                    result[field.name] = thisModelData[field.name].getRawData();
                 }
             }
         });
@@ -2150,14 +2149,14 @@ Ext.define('Ext.ux.data.AsyncStore', {
 
     },
 
-    //getData: function (options) {
-    //    var me = this;
-    //    var result = [];
-    //    me.each(function (record) {
-    //        result.push(record.getData(options));
-    //    });
-    //    return result;
-    //},
+    getRawData: function (options) {
+        var me = this;
+        var result = [];
+        me.each(function (record) {
+            result.push(record.getData(options));
+        });
+        return result;
+    },
 
     clear: function () {
         var me = this;
@@ -2290,10 +2289,6 @@ Ext.define('Ext.ux.data.AsyncStore', {
     afterMetaDataChange: function (record, modifiedFieldNames) {
         this.getData().itemChanged(record, modifiedFieldNames || null, undefined, Ext.data.Model.METACHANGE);
     },
-
-    //afterValidated: function (record, modifiedFieldNames) {
-    //    this.getData().itemChanged(record, modifiedFieldNames || null, undefined, Ext.data.Model.VALIDATED);
-    //},
 
     afterValidChange: function (record, modifiedFieldNames) {
         this.getData().itemChanged(record, modifiedFieldNames || null, undefined, Ext.data.Model.VALIDCHANGE);

@@ -55,8 +55,8 @@
     onFormFieldBound: function (formField, model, modelFieldName) {},
     onFormFieldUnbound: function (formField, model, modelFieldName) { },
 
-    onBindableControldBound: function (control, model, modelFieldName) { },
-    onBindableControldUnbound: function (control, model, modelFieldName) { },
+    onBindableControlBound: function (control, model, modelFieldName) { },
+    onBindableControlUnbound: function (control, model, modelFieldName) { },
     //endregion
 
     //region Private methods
@@ -255,7 +255,7 @@
             metaDataBinder.onComponentBound(bindableControl, model, modelFieldName);
             metaDataBinder.applyMetaData(bindableControl, model.getMeta(modelFieldName, metaDataName), model, modelFieldName);
         });
-        me.onBindableControldBound(bindableControl, model, modelFieldName);
+        me.onBindableControlBound(bindableControl, model, modelFieldName);
     },
 
     unbindBindableControl: function (bindableControl) {
