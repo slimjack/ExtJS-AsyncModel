@@ -4,6 +4,7 @@
 
     onBindModelClick: function () {
         this.model = new demo.MainModel();
+        //this.model.get('field4').get('field4').add(new demo.StoreModel());
         this.getView().bindModel(this.model);
     },
 

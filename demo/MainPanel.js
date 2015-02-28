@@ -30,19 +30,22 @@
     }, {
         xtype: 'textfield',
         name: 'field1',
-        fieldLabel: 'Nested Field 1'
+        fieldLabel: 'Field 1'
     }, {
         xtype: 'textfield',
         name: 'field2',
-        fieldLabel: 'Nested Field 2'
+        fieldLabel: 'Field 2'
     }, {
-        xtype: 'textfield',
+        xtype: 'checkbox',
         name: 'field3',
-        fieldLabel: 'Nested Field 3'
+        fieldLabel: 'Field 3'
     }, {
         xtype: 'demogrid',
+        height: 500,
+        width: 500,
         dataField: 'field4',
-        storeDataField: 'field4'
+        storeDataField: 'field4',
+        layout: 'fit'
     }]
 
 });

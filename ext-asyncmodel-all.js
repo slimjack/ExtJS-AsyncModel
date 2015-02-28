@@ -228,7 +228,6 @@ Ext.define('Ext.ux.plugin.DataBinding', {
     //region Private methods
     bindModel: function (model) {
         var me = this;
-        me.clearBinding();
         me.model = model;
         me.bindFormFields();
         me.bindBindableControls();
@@ -630,24 +629,33 @@ Ext.define('Ext.ux.plugin.GridDataBinding', {
         var me = this;
         me.mixins.observable.constructor.call(me);
         me.callParent(arguments);
-        me.overrideColumnRenderers();
-        me.overrideGridViewOnUpdate(me._owner);
-        me.mon(me._owner, {
-            reconfigure: {
-                fn: me.onReconfigure,
-                scope: me
-            }
-        });
-        Ext.Array.each(me.gridMetaDataBinders, function (binder) {
-            binder.onInit(me._owner, me);
-        });
+    },
+
+    initBinders: function() {
+        var me = this;
+        if (!me._bindersInitialized) {
+            me.overrideColumnRenderers();
+            me.overrideGridViewOnUpdate(me._owner);
+            me.mon(me._owner, {
+                reconfigure: {
+                    fn: me.onReconfigure,
+                    scope: me
+                }
+            });
+            Ext.Array.each(me.gridMetaDataBinders, function(binder) {
+                binder.onInit(me._owner, me);
+            });
+            me._bindersInitialized = true;
+        }
     },
 
     destroy: function() {
         var me = this;
-        Ext.Array.each(me.gridMetaDataBinders, function (binder) {
-            binder.onDestroy(me._owner, me);
-        });
+        if (me._bindersInitialized) {
+            Ext.Array.each(me.gridMetaDataBinders, function (binder) {
+                binder.onDestroy(me._owner, me);
+            });
+        }
     },
 
     applyBindableInterfaceToOwner: function () {
@@ -673,6 +681,7 @@ Ext.define('Ext.ux.plugin.GridDataBinding', {
 
     bindStore: function (store) {
         var me = this;
+        me.initBinders();
         me._store = store;
         me._originalStore = me._owner.store;
         me._storebinding = true;

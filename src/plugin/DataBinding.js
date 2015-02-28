@@ -62,7 +62,6 @@
     //region Private methods
     bindModel: function (model) {
         var me = this;
-        me.clearBinding();
         me.model = model;
         me.bindFormFields();
         me.bindBindableControls();
