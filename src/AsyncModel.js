@@ -38,15 +38,12 @@
         me.mixins.observable.constructor.call(me);
         me.validationRules = me.validationRules || {};
         me.businessRules = me.businessRules || {};
-        me.metaDataModel = me.metaDataModel || {};
-        me.metaDataValidatorsMap = me.metaDataValidatorsMap || {};
         me.proxy = me.proxy || me._defaultProxy;
 
         me._ignoredFieldNames = [];
         me._modifiedNestedFieldNames = [];
         me._validationCallbacks = [];
         me._businessLogicSyncCallbacks = [];
-        me._validationModel = {};
 
         me._suppressValidation++;
         me.initMetaData();
@@ -93,14 +90,14 @@
 
     initMetaData: function () {
         var me = this;
-        Ext.applyIf(me.metaDataModel, me._defaultMetaDataModel);
-        me.metaData = {};
+        me._metaDataModel = Ext.apply({}, me.metaDataModel, me._defaultMetaDataModel);
+        me._metaData = {};
         Ext.Array.each(me.fields, function (field) {
             if (field.name !== me.idProperty) {
-                me.metaData[field.name] = {};
-                Ext.Object.each(me.metaDataModel, function (metaName, metaValue) {
+                me._metaData[field.name] = {};
+                Ext.Object.each(me._metaDataModel, function (metaName, metaValue) {
                     field[metaName] = field[metaName] || metaValue;//initial meta value
-                    me.metaData[field.name][metaName] = field[metaName] || metaValue;
+                    me._metaData[field.name][metaName] = field[metaName] || metaValue;
                 });
             }
         });
@@ -108,14 +105,16 @@
 
     initValidationModel: function () {
         var me = this;
-        me.metaDataValidatorsMap = Ext.applyIf(me.metaDataValidatorsMap, MetaDataValidatorMapper.getValidatorsMap());
-        me.metaDataValidatorsMap = Ext.applyIf(me.metaDataValidatorsMap, me._defaultMetaDataValidatorsMap);
-        Ext.Object.each(me.metaDataValidatorsMap, function(metaDataName, mapRecord) {
+        me._metaDataValidatorsMap = Ext.apply({}, MetaDataValidatorMapper.getValidatorsMap(), me.metaDataValidatorsMap);
+        me._metaDataValidatorsMap = Ext.applyIf(me._metaDataValidatorsMap, me._defaultMetaDataValidatorsMap);
+        Ext.Object.each(me._metaDataValidatorsMap, function(metaDataName, mapRecord) {
             mapRecord.activationRule = mapRecord.activationRule || function (model, fieldName) {
                 return !!model.getMeta(fieldName, metaDataName);
             };
         });
         var emptyOptions = JSON.stringify({});
+        me._validationModel = {};
+        me._validationRules = {};
         Ext.Array.each(me.fields, function (field) {
             if (field.name !== me.idProperty) {
                 me._validationModel[field.name] = {
@@ -126,26 +125,27 @@
                     callbacks: [],
                     dependentFieldNames: field.dependentFields || []
                 };
-                me.validationRules[field.name] = me.createValidationRule(field.name);
+                me._validationRules[field.name] = me.createValidationRule(field.name);
             }
         });
     },
 
     initBusinessRules: function () {
         var me = this;
-        me.businessRuleCompletedCallback = Ext.bind(me.onBusinessRuleCompleted, me);
+        me._businessRuleCompletedCallback = Ext.bind(me.onBusinessRuleCompleted, me);
+        me._businessRules = {};
         Ext.Array.each(me.fields, function (field) {
             if (field.name === me.idProperty) { return; }
 
             var changeRuleName = field.name + 'Change';
             var changeRule = me.businessRules[changeRuleName];
             if (changeRule) {
-                me.businessRules[changeRuleName] = me.createAsyncRule(changeRule, me.defaultBusinessService);
+                me._businessRules[changeRuleName] = me.createAsyncRule(changeRule, me.defaultBusinessService);
             }
             var validChangeRuleName = field.name + 'ValidChange';
             var validChangeRule = me.businessRules[validChangeRuleName];
             if (validChangeRule) {
-                me.businessRules[validChangeRuleName] = me.createAsyncRule(validChangeRule, me.defaultBusinessService);
+                me._businessRules[validChangeRuleName] = me.createAsyncRule(validChangeRule, me.defaultBusinessService);
             }
         });
     },
@@ -155,7 +155,7 @@
     getMetaDataNames: function() {
         var me = this;
         var result = [];
-        Ext.Object.each(me.metaDataModel, function (metaDataName) {
+        Ext.Object.each(me._metaDataModel, function (metaDataName) {
             result.push(metaDataName);
         });
         return result;
@@ -167,7 +167,7 @@
         Ext.Array.each(me.fields, function (field) {
             if (field.name === me.idProperty) { return; }
             if (field.isStoreField || field.isModelField) {
-                me.get(field.name).syncWithBusinessRules(me.businessRuleCompletedCallback);
+                me.get(field.name).syncWithBusinessRules(me._businessRuleCompletedCallback);
             } else {
                 me._businessRulesSyncCounter--;
             }
@@ -211,11 +211,11 @@
         if (syncWithBusinessRules) {
             me.syncWithBusinessRules(function () {
                 me._businessRulesSyncCounter++;
-                businessFn(me.businessRuleCompletedCallback);
+                businessFn(me._businessRuleCompletedCallback);
             });
         } else {
             me._businessRulesSyncCounter++;
-            businessFn(me.businessRuleCompletedCallback);
+            businessFn(me._businessRuleCompletedCallback);
         }
     },
 
@@ -348,7 +348,7 @@
 
     getMeta: function (fieldName, metaDataFieldName) {
         var me = this;
-        return me.metaData[fieldName][metaDataFieldName];
+        return me._metaData[fieldName][metaDataFieldName];
     },
 
     resetMetaData: function () {
@@ -356,7 +356,7 @@
         me._suppressValidation++;
         Ext.Array.each(me.fields, function (field) {
             if (field.name !== me.idProperty) {
-                Ext.Object.each(me.metaData[field.name], function (metaName) {
+                Ext.Object.each(me._metaData[field.name], function (metaName) {
                     if (metaName !== 'validationErrorMessage' || metaName !== 'validationInfoMessage') {
                         me.setMeta(field.name, metaName, field[metaName]);
                     }
@@ -638,7 +638,7 @@
             fieldValidationModel.lastValidatingOptions = currentOptions;
         }
         var modelState = me._modelState;
-        var validateFn = me.validationRules[fieldName];
+        var validateFn = me._validationRules[fieldName];
         if (callback) {
             fieldValidationModel.callbacks.push(callback);
         }
@@ -703,9 +703,9 @@
     runBusinessRule: function (fieldName, ruleType) {
         var me = this;
         var businessRuleName = fieldName + ruleType;
-        if (me.businessRules[businessRuleName]) {
+        if (me._businessRules[businessRuleName]) {
             me._businessRulesSyncCounter++;
-            me.businessRules[businessRuleName](me.get(fieldName), me.businessRuleCompletedCallback);
+            me._businessRules[businessRuleName](me.get(fieldName), me._businessRuleCompletedCallback);
         }
     },
 
@@ -722,9 +722,9 @@
         var me = this;
         var field = Ext.Array.findBy(me.fields, function (f) { return f.name === fieldName; });
         var result = [];
-        Ext.Object.each(me.metaDataModel, function (metaDataName) {
-            if (me.metaDataValidatorsMap[metaDataName]) {
-                var validator = me.createMappedValidator(field, me.metaDataValidatorsMap[metaDataName]);
+        Ext.Object.each(me._metaDataModel, function (metaDataName) {
+            if (me._metaDataValidatorsMap[metaDataName]) {
+                var validator = me.createMappedValidator(field, me._metaDataValidatorsMap[metaDataName]);
                 result.push(validator);
             }
         });
@@ -977,11 +977,11 @@
     setMetaInternal: function (fieldName, metaDataFieldName, value, suppressValidation) {
         var me = this;
 
-        if (me.metaData[fieldName][metaDataFieldName] !== value) {
+        if (me._metaData[fieldName][metaDataFieldName] !== value) {
             if (suppressValidation) {
                 me._suppressValidation++;
             }
-            me.metaData[fieldName][metaDataFieldName] = value;
+            me._metaData[fieldName][metaDataFieldName] = value;
             me.onMetaDataChange(fieldName, metaDataFieldName, value);
             if (suppressValidation) {
                 me._suppressValidation--;
@@ -1013,66 +1013,66 @@
     statics: {
         initValidationRules: function (data, cls, proto) {
             var validationRules = {};
-            if (proto.validationRules) {
-                var superValidationRules = proto.validationRules;
-                delete proto.validationRules;
+            if (proto._validationRules) {
+                var superValidationRules = proto._validationRules;
+                delete proto._validationRules;
                 validationRules = Ext.merge(validationRules, superValidationRules);
             }
 
-            if (data.validationRules) {
-                var validationRulesDefs = data.validationRules;
-                delete data.validationRules;
+            if (data._validationRules) {
+                var validationRulesDefs = data._validationRules;
+                delete data._validationRules;
                 validationRules = Ext.merge(validationRules, validationRulesDefs);
             }
-            cls.validationRules = proto.validationRules = validationRules;
+            cls._validationRules = proto._validationRules = validationRules;
         },
 
         initBusinessRules: function (data, cls, proto) {
             var businessRules = {};
-            if (proto.businessRules) {
-                var superBusinessRules = proto.businessRules;
-                delete proto.businessRules;
+            if (proto._businessRules) {
+                var superBusinessRules = proto._businessRules;
+                delete proto._businessRules;
                 businessRules = Ext.merge(businessRules, superBusinessRules);
             }
 
-            if (data.businessRules) {
-                var businessRulesDefs = data.businessRules;
-                delete data.businessRules;
+            if (data._businessRules) {
+                var businessRulesDefs = data._businessRules;
+                delete data._businessRules;
                 businessRules = Ext.merge(businessRules, businessRulesDefs);
             }
-            cls.businessRules = proto.businessRules = businessRules;
+            cls._businessRules = proto._businessRules = businessRules;
         },
 
         initMetaDataModel: function (data, cls, proto) {
             var metaDataModel = {};
-            if (proto.metaDataModel) {
-                var superMetaDataModel = proto.metaDataModel;
-                delete proto.metaDataModel;
+            if (proto._metaDataModel) {
+                var superMetaDataModel = proto._metaDataModel;
+                delete proto._metaDataModel;
                 metaDataModel = Ext.merge(metaDataModel, superMetaDataModel);
             }
 
-            if (data.metaDataModel) {
-                var metaDataModelDefs = data.metaDataModel;
-                delete data.metaDataModel;
+            if (data._metaDataModel) {
+                var metaDataModelDefs = data._metaDataModel;
+                delete data._metaDataModel;
                 metaDataModel = Ext.merge(metaDataModel, metaDataModelDefs);
             }
-            cls.metaDataModel = proto.metaDataModel = metaDataModel;
+            cls._metaDataModel = proto._metaDataModel = metaDataModel;
         },
 
         initMetaDataValidatorsMap: function (data, cls, proto) {
             var metaDataValidatorsMap = {};
-            if (proto.metaDataValidatorsMap) {
-                var superMetaDataValidatorsMap = proto.metaDataValidatorsMap;
-                delete proto.metaDataValidatorsMap;
+            if (proto._metaDataValidatorsMap) {
+                var superMetaDataValidatorsMap = proto._metaDataValidatorsMap;
+                delete proto._metaDataValidatorsMap;
                 metaDataValidatorsMap = Ext.merge(metaDataValidatorsMap, superMetaDataValidatorsMap);
             }
 
-            if (data.metaDataValidatorsMap) {
-                var metaDataValidatorsMapDefs = data.metaDataValidatorsMap;
-                delete data.metaDataValidatorsMap;
+            if (data._metaDataValidatorsMap) {
+                var metaDataValidatorsMapDefs = data._metaDataValidatorsMap;
+                delete data._metaDataValidatorsMap;
                 metaDataValidatorsMap = Ext.merge(metaDataValidatorsMap, metaDataValidatorsMapDefs);
             }
-            cls.metaDataValidatorsMap = proto.metaDataValidatorsMap = metaDataValidatorsMap;
+            cls._metaDataValidatorsMap = proto._metaDataValidatorsMap = metaDataValidatorsMap;
         }
     }
 },

@@ -11,6 +11,8 @@
         if (validationErrorMessage) {
             metadata.tdCls += ' ' + this.invalidCellCls;
             metadata.tdAttr = 'data-errorqtip="' + validationErrorMessage + '"';
+        } else {
+            metadata.tdAttr = 'data-errorqtip=""';
         }
     }
 });

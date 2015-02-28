@@ -23,7 +23,7 @@
     init: function (owner) {
         var me = this;
         me._owner = owner;
-        me._formFields = new ComponentQuery(me._owner, '[isFormField][name], [isFormField][dataField]', '[isBindable] [isFormField], [isFormField] [isFormField]');
+        me._formFields = new ComponentQuery(me._owner, '[isFormField][name]:not([excludeForm]), [isFormField][dataField]:not([excludeForm])', '[isBindable] [isFormField], [isFormField] [isFormField]');
         me._bindableControls = new ComponentQuery(me._owner, '[isBindable][dataField]', '[isBindable]:not([dataField]) [isBindable]');
         me._formFields.on('queryadd', me.onFormFieldsAdded, me);
         me._formFields.on('queryremove', me.onFormFieldsRemoved, me);
