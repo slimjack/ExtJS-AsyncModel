@@ -75,7 +75,7 @@
         }, {
             xtype: 'label',
             flex: 1,
-            text: '"badvalue" is invalid (deferred validation)'
+            text: '"badvalue" is invalid'
         }]
     }, {
         xtype: 'container',
@@ -91,7 +91,7 @@
         }, {
             xtype: 'label',
             flex: 1,
-            text: '"excluded" is in exclusion list, "invalidvalue" is also invalid (deferred validation)'
+            text: '"excluded" is in exclusion list, "invalidvalue" is also invalid'
         }]
     }, {
         xtype: 'container',
@@ -107,7 +107,7 @@
         }, {
             xtype: 'label',
             flex: 1,
-            text: '"badvalue" is invalid (deferred validation)'
+            text: '"badvalue" is invalid'
         }]
     }, {
         xtype: 'container',
@@ -123,7 +123,7 @@
         }, {
             xtype: 'label',
             flex: 1,
-            text: '"excluded" is in exclusion list, "invalidvalue" is also invalid (deferred validation)'
+            text: '"excluded" is in exclusion list, "invalidvalue" is also invalid'
         }]
     }, {
         xtype: 'container',
