@@ -1,4 +1,6 @@
-﻿Ext.define('Ext.ux.binder.GridValidationBinder', {
+﻿//https://github.com/slimjack/ExtJs-AsyncModel
+
+Ext.define('Ext.ux.binder.GridValidationBinder', {
     implement: 'IGridMetaDataBinder',
     invalidCellCls: 'invalidGridCell',
     

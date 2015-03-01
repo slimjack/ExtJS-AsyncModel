@@ -1,4 +1,6 @@
-﻿Ext.define('Ext.ux.plugin.DataBinding', {
+﻿//https://github.com/slimjack/ExtJs-AsyncModel
+
+Ext.define('Ext.ux.plugin.DataBinding', {
     alias: 'plugin.databinding',
     extend: 'Ext.AbstractPlugin',
     inject: {
@@ -23,8 +25,8 @@
     init: function (owner) {
         var me = this;
         me._owner = owner;
-        me._formFields = new ComponentQuery(me._owner, '[isFormField][name]:not([excludeForm]), [isFormField][dataField]:not([excludeForm])', '[isBindable] [isFormField], [isFormField] [isFormField]');
-        me._bindableControls = new ComponentQuery(me._owner, '[isBindable][dataField]', '[isBindable]:not([dataField]) [isBindable]');
+        me._formFields = new DynamicComponentQuery(me._owner, '[isFormField][name]:not([excludeForm]), [isFormField][dataField]:not([excludeForm])', '[isBindable] [isFormField], [isFormField] [isFormField]');
+        me._bindableControls = new DynamicComponentQuery(me._owner, '[isBindable][dataField]', '[isBindable]:not([dataField]) [isBindable]');
         me._formFields.on('queryadd', me.onFormFieldsAdded, me);
         me._formFields.on('queryremove', me.onFormFieldsRemoved, me);
         me._bindableControls.on('queryadd', me.onBindableControlsAdded, me);

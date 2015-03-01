@@ -1,4 +1,6 @@
-﻿Ext.defineInterface('IMetaDataBinder', {
+﻿//https://github.com/slimjack/ExtJs-AsyncModel
+
+Ext.defineInterface('IMetaDataBinder', {
     inherit: 'ISingleton',
     methods: [
         'getMetaDataName',

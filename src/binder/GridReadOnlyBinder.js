@@ -1,4 +1,6 @@
-﻿Ext.define('Ext.ux.binder.GridReadOnlyBinder', {
+﻿//https://github.com/slimjack/ExtJs-AsyncModel
+
+Ext.define('Ext.ux.binder.GridReadOnlyBinder', {
     implement: 'IGridMetaDataBinder',
 
     onInit: function(grid, plugin) {

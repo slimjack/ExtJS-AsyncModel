@@ -1,6 +1,5 @@
-﻿//'HIS.Library.plugins.DataBinding' is used for grids
-//This plugin adds to its owner an implementaion of 'HIS.Library.mixins.Bindable' (method 'bindModel' and flag 'isBindable'),
-//method 'bindModel' accepts only 'Ext.ux.data.AsyncModel' or 'Ext.ux.data.AsyncStore'
+﻿//https://github.com/slimjack/ExtJs-AsyncModel
+
 Ext.define('Ext.ux.plugin.GridDataBinding', {
     alias: 'plugin.griddatabinding',
     extend: 'Ext.ux.plugin.DataBinding',

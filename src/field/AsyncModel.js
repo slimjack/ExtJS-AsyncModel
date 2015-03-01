@@ -1,4 +1,6 @@
-﻿Ext.define('Ext.ux.data.field.AsyncModel', {
+﻿//https://github.com/slimjack/ExtJs-AsyncModel
+
+Ext.define('Ext.ux.data.field.AsyncModel', {
     extend: 'Ext.data.field.Field',
 
     alias: [

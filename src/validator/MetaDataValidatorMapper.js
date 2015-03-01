@@ -1,4 +1,6 @@
-﻿Ext.define('Ext.ux.validator.MetaDataValidatorMapper', {
+﻿//https://github.com/slimjack/ExtJs-AsyncModel
+
+Ext.define('Ext.ux.validator.MetaDataValidatorMapper', {
     alternateClassName: 'MetaDataValidatorMapper',
     singleton: true,
 

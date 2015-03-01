@@ -1,4 +1,6 @@
-﻿//Ext.ux.data.AsyncStore must be used only with Ext.ux.data.AsyncModel
+﻿//https://github.com/slimjack/ExtJs-AsyncModel
+
+//Ext.ux.data.AsyncStore can be used only with Ext.ux.data.AsyncModel
 Ext.define('Ext.ux.data.AsyncStore', {
     extend: 'Ext.data.Store',
     selectionModel: null,

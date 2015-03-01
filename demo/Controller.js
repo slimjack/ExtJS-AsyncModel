@@ -4,7 +4,7 @@
 
     onBindModelClick: function () {
         this.model = new demo.MainModel();
-        (new ComponentQuery(this.lookupReference('metacontrols'), 'checkbox')).enable();
+        (new DynamicComponentQuery(this.lookupReference('metacontrols'), 'checkbox')).enable();
         this.getView().bindModel(this.model);
     },
 

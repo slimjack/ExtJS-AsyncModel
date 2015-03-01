@@ -1,4 +1,6 @@
-﻿Ext.define('Ext.ux.mixin.Bindable', {
+﻿//https://github.com/slimjack/ExtJs-AsyncModel
+
+Ext.define('Ext.ux.mixin.Bindable', {
     isBindable: true,
 
     //'model' is an instance of 'Ext.ux.data.AsyncModel' or 'Ext.ux.data.AsyncStore'

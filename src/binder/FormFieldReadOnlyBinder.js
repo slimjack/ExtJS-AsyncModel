@@ -1,4 +1,6 @@
-﻿Ext.define('Ext.ux.binder.FormFieldReadOnlyBinder', {
+﻿//https://github.com/slimjack/ExtJs-AsyncModel
+
+Ext.define('Ext.ux.binder.FormFieldReadOnlyBinder', {
     extend: 'Ext.ux.binder.AbstractFormFieldBinder',
     metaDataName: 'readOnly',
 

@@ -1,4 +1,6 @@
-﻿Ext.define('Ext.ux.binder.GridRequiredBinder', {
+﻿//https://github.com/slimjack/ExtJs-AsyncModel
+
+Ext.define('Ext.ux.binder.GridRequiredBinder', {
     implement: 'IGridMetaDataBinder',
     requiredCellCls: 'requiredGridCell',
 
