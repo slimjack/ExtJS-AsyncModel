@@ -13,6 +13,18 @@
     },
 
     onValidateClick: function () {
-        this.model.validate({validatePresence: true});
+        this.model.validate({ validatePresence: true });
+    },
+
+    onField1RequiredChange: function (ctrl, value) {
+        this.model.setMeta('field1', 'required', value);
+    },
+
+    onField1ReadOnlyChange: function (ctrl, value) {
+        this.model.setMeta('field1', 'readOnly', value);
+    },
+
+    onField2RequiredChange: function (ctrl, value) {
+        this.model.setMeta('field2', 'required', value);
     }
 });
