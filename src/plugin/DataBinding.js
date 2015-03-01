@@ -41,6 +41,7 @@
                 if (!(model instanceof Ext.ux.data.AsyncModel)) {
                     Ext.Error.raise(me._owner.$className + '.bindModel method accepts only "Ext.ux.data.AsyncModel" type');
                 }
+                this.clearModelBinding();
                 me.bindModel(model);
             },
             clearModelBinding: function () {
@@ -74,7 +75,9 @@
         if (me.model) {
             me.unbindFormFields();
             me.unbindBindableControls();
+            var model = me.model;
             me.model = null;
+            me._owner.fireEvent('modelunbound', me._owner, model);
         }
     },
 
