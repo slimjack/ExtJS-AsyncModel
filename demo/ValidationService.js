@@ -8,7 +8,7 @@
             } else {
                 callback('');
             }
-        }, 1000);
+        }, 2000);
     },
 
     validateField2: function (model, value, options, callback) {
@@ -18,7 +18,7 @@
             } else {
                 callback('');
             }
-        }, 1000);
+        }, 2000);
     },
 
     validateField3: function (model, value, options, callback) {
@@ -28,6 +28,6 @@
             } else {
                 callback('');
             }
-        }, 1000);
+        }, 2000);
     }
 });
