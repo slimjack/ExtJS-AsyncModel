@@ -324,7 +324,6 @@ Ext.define('Ext.ux.plugin.DataBinding', {
         me._formFieldsMap.remove(formField.dataField, formFieldRecord);
 
         var model = me._modelFieldsMap[formField.dataField].model;
-        delete me._modelFieldsMap[formField.dataField];
         var modelFieldPathElements = formField.dataField.split('.');
         var modelFieldName = modelFieldPathElements[modelFieldPathElements.length - 1];
         if (!me._formFieldsMap.get(formField.dataField).length) {
@@ -332,6 +331,7 @@ Ext.define('Ext.ux.plugin.DataBinding', {
             var modelIndex = modelPath || me._rootModelIndex;
             me.unsubscribeModel(model);
             delete me._subscribedModels[modelIndex];
+            delete me._modelFieldsMap[formField.dataField];
         }
 
         Ext.Object.eachValue(formFieldRecord.metaDataBindersMap, function (metaDataBinder) {
@@ -438,9 +438,11 @@ Ext.define('Ext.ux.plugin.DataBinding', {
         me._bindableControlsMap.remove(bindableControl.dataField, bindableControl);
 
         var model = me._modelFieldsMap[bindableControl.dataField].model;
-        delete me._modelFieldsMap[bindableControl.dataField];
         var modelFieldPathElements = bindableControl.dataField.split('.');
         var modelFieldName = modelFieldPathElements[modelFieldPathElements.length - 1];
+        if (!me._bindableControlsMap.get(bindableControl.dataField).length) {
+            delete me._modelFieldsMap[bindableControl.dataField];
+        }
 
         Ext.Object.eachValue(bindableControlRecord.metaDataBindersMap, function (metaDataBinder) {
             metaDataBinder.onComponentUnbound(bindableControl, model, modelFieldName);
