@@ -1,0 +1,11 @@
+*.dll
+*.config
+bin/*
+obj/*
+*.pdb
+*.csproj
+*.csproj.user
+*.bundle
+Test/*
+*.cs
+ext-asyncmodel-all.min.js.map
