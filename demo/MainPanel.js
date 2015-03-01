@@ -14,6 +14,7 @@
         xtype: 'container',
         width: 800,
         layout: 'hbox',
+        reference: 'metacontrols',
         defaults: {
             margin: 5
         },
@@ -38,6 +39,7 @@
         }, {
             xtype: 'checkbox',
             fieldLabel: 'Field 1 required',
+            disabled: true,
             value: true,
             listeners: {
                 change: 'onField1RequiredChange'
@@ -45,6 +47,7 @@
         }, {
             xtype: 'checkbox',
             value: false,
+            disabled: true,
             fieldLabel: 'Field 1 readOnly',
             listeners: {
                 change: 'onField1ReadOnlyChange'
@@ -52,6 +55,7 @@
         }, {
             xtype: 'checkbox',
             value: true,
+            disabled: true,
             fieldLabel: 'Field 2 required',
             listeners: {
                 change: 'onField2RequiredChange'
@@ -139,9 +143,16 @@
         }]
     }, {
         xtype: 'demogrid',
-        height: 500,
+        height: 200,
         dataField: 'field4',
-        storeDataField: 'field4'
+        storeDataField: 'field4',
+        listeners: {
+            selectionchange: 'onSelected'
+        }
+    }, {
+        xtype: 'detailspanel',
+        reference: 'details',
+        title: 'Details'
     }]
 
 });

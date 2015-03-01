@@ -209,6 +209,7 @@ Ext.define('Ext.ux.plugin.DataBinding', {
                 if (!(model instanceof Ext.ux.data.AsyncModel)) {
                     Ext.Error.raise(me._owner.$className + '.bindModel method accepts only "Ext.ux.data.AsyncModel" type');
                 }
+                this.clearModelBinding();
                 me.bindModel(model);
             },
             clearModelBinding: function () {
@@ -242,7 +243,9 @@ Ext.define('Ext.ux.plugin.DataBinding', {
         if (me.model) {
             me.unbindFormFields();
             me.unbindBindableControls();
+            var model = me.model;
             me.model = null;
+            me._owner.fireEvent('modelunbound', me._owner, model);
         }
     },
 
@@ -670,8 +673,10 @@ Ext.define('Ext.ux.plugin.GridDataBinding', {
                     Ext.Error.raise(Ext.create('ArgumentTypeException', { msg: owner.$className + '.bindModel method accepts only "Ext.ux.data.AsyncStore" type' }));
                 }
                 if (model instanceof Ext.ux.data.AsyncStore) {
+                    this.clearModelBinding();
                     me.bindStore(model);
                 } else {
+                    this.clearModelBinding();
                     if (me._owner.storeDataField) {
                         me.bindStore(model.get(me._owner.storeDataField));
                     }
@@ -699,8 +704,10 @@ Ext.define('Ext.ux.plugin.GridDataBinding', {
             me._storebinding = true;
             me._owner.reconfigure(me._originalStore);
             me._storebinding = false;
+            var store = me._store;
             me._store = null;
             me._originalStore = null;
+            me._owner.fireEvent('storeunbound', me._owner, store);
         }
     },
 

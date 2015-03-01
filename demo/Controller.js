@@ -4,7 +4,7 @@
 
     onBindModelClick: function () {
         this.model = new demo.MainModel();
-        //this.model.get('field4').get('field4').add(new demo.StoreModel());
+        (new ComponentQuery(this.lookupReference('metacontrols'), 'checkbox')).enable();
         this.getView().bindModel(this.model);
     },
 
@@ -26,5 +26,13 @@
 
     onField2RequiredChange: function (ctrl, value) {
         this.model.setMeta('field2', 'required', value);
+    },
+
+    onSelected: function (plugin, selected) {
+        if (!selected.length) {
+            this.lookupReference('details').clearModelBinding();
+        } else {
+            this.lookupReference('details').bindModel(selected[0]);
+        }
     }
 });
