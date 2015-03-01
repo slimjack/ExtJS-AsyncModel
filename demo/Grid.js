@@ -7,19 +7,22 @@
     }],
     store: new Ext.data.Store(),
 
-    //items: [{
-    //    xtype: 'textfield',
-    //    name: 'field1',
-    //    fieldLabel: 'Nested Field 1'
-    //}, {
-    //    xtype: 'textfield',
-    //    name: 'field2',
-    //    fieldLabel: 'Nested Field 2'
-    //}, {
-    //    xtype: 'textfield',
-    //    name: 'field3',
-    //    fieldLabel: 'Nested Field 3'
-    //}],
+    dockedItems: [{
+        xtype: 'textfield',
+        name: 'field1',
+        margin: 5,
+        fieldLabel: 'Nested Field 1'
+    }, {
+        xtype: 'textfield',
+        name: 'field2',
+        margin: 5,
+        fieldLabel: 'Nested Field 2'
+    }, {
+        xtype: 'textfield',
+        name: 'field3',
+        margin: 5,
+        fieldLabel: 'Nested Field 3'
+    }],
 
     columns: [{
         dataIndex: 'field1',
