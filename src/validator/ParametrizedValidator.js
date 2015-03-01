@@ -1,4 +1,6 @@
-﻿Ext.define('Ext.data.validator.ParametrizedValidator', {
+﻿//https://github.com/slimjack/ExtJs-AsyncModel
+
+Ext.define('Ext.data.validator.ParametrizedValidator', {
     extend: 'Ext.data.validator.Validator',
     alias: 'data.validator.baseparametrizedvalidator',
 

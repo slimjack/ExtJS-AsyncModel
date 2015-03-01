@@ -1,4 +1,6 @@
-﻿Ext.override('Ext.data.validator.Bound', {
+﻿//https://github.com/slimjack/ExtJs-AsyncModel
+
+Ext.override('Ext.data.validator.Bound', {
     autoTrim: true,
     getValue: function (fieldValue) {
         var me = this;

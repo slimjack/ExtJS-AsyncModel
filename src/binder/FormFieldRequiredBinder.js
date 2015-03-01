@@ -1,4 +1,6 @@
-﻿Ext.define('Ext.ux.binder.FormFieldRequiredBinder', {
+﻿//https://github.com/slimjack/ExtJs-AsyncModel
+
+Ext.define('Ext.ux.binder.FormFieldRequiredBinder', {
     extend: 'Ext.ux.binder.AbstractFormFieldBinder',
 
     requiredClassName: 'requiredField',

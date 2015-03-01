@@ -1,4 +1,6 @@
-﻿Ext.define('Ext.ux.data.AsyncModel', {
+﻿//https://github.com/slimjack/ExtJs-AsyncModel
+
+Ext.define('Ext.ux.data.AsyncModel', {
     extend: 'Ext.data.Model',
 
     mixins: [

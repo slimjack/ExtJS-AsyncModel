@@ -1,4 +1,6 @@
-﻿Ext.define('Ext.data.validator.Required', {
+﻿//https://github.com/slimjack/ExtJs-AsyncModel
+
+Ext.define('Ext.data.validator.Required', {
     extend: 'Ext.data.validator.ParametrizedValidator',
     alias: 'data.validator.required',
     type: 'required',

@@ -1,4 +1,6 @@
-﻿Ext.define('Ext.ux.plugin.ExternalValidating', {
+﻿//https://github.com/slimjack/ExtJs-AsyncModel
+
+Ext.define('Ext.ux.plugin.ExternalValidating', {
     alias: 'plugin.externalvalidating',
     extend: 'Ext.AbstractPlugin',
 

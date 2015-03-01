@@ -1,4 +1,6 @@
 ﻿///#source 1 1 /src/binder/IGridMetaDataBinder.js
+//https://github.com/slimjack/ExtJs-AsyncModel
+
 Ext.defineInterface('IGridMetaDataBinder', {
     inherit: 'ISingleton',
     methods: [
@@ -8,6 +10,8 @@ Ext.defineInterface('IGridMetaDataBinder', {
     ]
 });
 ///#source 1 1 /src/binder/IMetaDataBinder.js
+//https://github.com/slimjack/ExtJs-AsyncModel
+
 Ext.defineInterface('IMetaDataBinder', {
     inherit: 'ISingleton',
     methods: [
@@ -19,6 +23,8 @@ Ext.defineInterface('IMetaDataBinder', {
     ]
 });
 ///#source 1 1 /src/binder/AbstractFormFieldBinder.js
+//https://github.com/slimjack/ExtJs-AsyncModel
+
 Ext.define('Ext.ux.binder.AbstractFormFieldBinder', {
     implement: 'IMetaDataBinder',
     abstractClass: true,
@@ -47,6 +53,8 @@ Ext.define('Ext.ux.binder.AbstractFormFieldBinder', {
     }
 });
 ///#source 1 1 /src/binder/FormFieldReadOnlyBinder.js
+//https://github.com/slimjack/ExtJs-AsyncModel
+
 Ext.define('Ext.ux.binder.FormFieldReadOnlyBinder', {
     extend: 'Ext.ux.binder.AbstractFormFieldBinder',
     metaDataName: 'readOnly',
@@ -64,6 +72,8 @@ Ext.define('Ext.ux.binder.FormFieldReadOnlyBinder', {
     }
 });
 ///#source 1 1 /src/binder/FormFieldRequiredBinder.js
+//https://github.com/slimjack/ExtJs-AsyncModel
+
 Ext.define('Ext.ux.binder.FormFieldRequiredBinder', {
     extend: 'Ext.ux.binder.AbstractFormFieldBinder',
 
@@ -81,6 +91,8 @@ Ext.define('Ext.ux.binder.FormFieldRequiredBinder', {
     }
 });
 ///#source 1 1 /src/binder/FormFieldValidationBinder.js
+//https://github.com/slimjack/ExtJs-AsyncModel
+
 Ext.define('Ext.ux.binder.FormFieldValidationBinder', {
     extend: 'Ext.ux.binder.AbstractFormFieldBinder',
     metaDataName: 'validationErrorMessage',
@@ -94,6 +106,8 @@ Ext.define('Ext.ux.binder.FormFieldValidationBinder', {
     }
 });
 ///#source 1 1 /src/binder/GridReadOnlyBinder.js
+//https://github.com/slimjack/ExtJs-AsyncModel
+
 Ext.define('Ext.ux.binder.GridReadOnlyBinder', {
     implement: 'IGridMetaDataBinder',
 
@@ -116,6 +130,8 @@ Ext.define('Ext.ux.binder.GridReadOnlyBinder', {
 
 });
 ///#source 1 1 /src/binder/GridRequiredBinder.js
+//https://github.com/slimjack/ExtJs-AsyncModel
+
 Ext.define('Ext.ux.binder.GridRequiredBinder', {
     implement: 'IGridMetaDataBinder',
     requiredCellCls: 'requiredGridCell',
@@ -133,6 +149,8 @@ Ext.define('Ext.ux.binder.GridRequiredBinder', {
 
 });
 ///#source 1 1 /src/binder/GridValidationBinder.js
+//https://github.com/slimjack/ExtJs-AsyncModel
+
 Ext.define('Ext.ux.binder.GridValidationBinder', {
     implement: 'IGridMetaDataBinder',
     invalidCellCls: 'invalidGridCell',
@@ -152,6 +170,8 @@ Ext.define('Ext.ux.binder.GridValidationBinder', {
     }
 });
 ///#source 1 1 /src/mixin/Bindable.js
+//https://github.com/slimjack/ExtJs-AsyncModel
+
 Ext.define('Ext.ux.mixin.Bindable', {
     isBindable: true,
 
@@ -166,6 +186,8 @@ Ext.define('Ext.ux.mixin.Bindable', {
 
 });
 ///#source 1 1 /src/plugin/DataBinding.js
+//https://github.com/slimjack/ExtJs-AsyncModel
+
 Ext.define('Ext.ux.plugin.DataBinding', {
     alias: 'plugin.databinding',
     extend: 'Ext.AbstractPlugin',
@@ -191,8 +213,8 @@ Ext.define('Ext.ux.plugin.DataBinding', {
     init: function (owner) {
         var me = this;
         me._owner = owner;
-        me._formFields = new ComponentQuery(me._owner, '[isFormField][name]:not([excludeForm]), [isFormField][dataField]:not([excludeForm])', '[isBindable] [isFormField], [isFormField] [isFormField]');
-        me._bindableControls = new ComponentQuery(me._owner, '[isBindable][dataField]', '[isBindable]:not([dataField]) [isBindable]');
+        me._formFields = new DynamicComponentQuery(me._owner, '[isFormField][name]:not([excludeForm]), [isFormField][dataField]:not([excludeForm])', '[isBindable] [isFormField], [isFormField] [isFormField]');
+        me._bindableControls = new DynamicComponentQuery(me._owner, '[isBindable][dataField]', '[isBindable]:not([dataField]) [isBindable]');
         me._formFields.on('queryadd', me.onFormFieldsAdded, me);
         me._formFields.on('queryremove', me.onFormFieldsRemoved, me);
         me._bindableControls.on('queryadd', me.onBindableControlsAdded, me);
@@ -584,6 +606,8 @@ Ext.define('Ext.ux.plugin.DataBinding', {
 
 
 ///#source 1 1 /src/plugin/ExternalValidating.js
+//https://github.com/slimjack/ExtJs-AsyncModel
+
 Ext.define('Ext.ux.plugin.ExternalValidating', {
     alias: 'plugin.externalvalidating',
     extend: 'Ext.AbstractPlugin',
@@ -618,9 +642,8 @@ Ext.define('Ext.ux.plugin.ExternalValidating', {
     }
 });
 ///#source 1 1 /src/plugin/GridDataBinding.js
-//'HIS.Library.plugins.DataBinding' is used for grids
-//This plugin adds to its owner an implementaion of 'HIS.Library.mixins.Bindable' (method 'bindModel' and flag 'isBindable'),
-//method 'bindModel' accepts only 'Ext.ux.data.AsyncModel' or 'Ext.ux.data.AsyncStore'
+//https://github.com/slimjack/ExtJs-AsyncModel
+
 Ext.define('Ext.ux.plugin.GridDataBinding', {
     alias: 'plugin.griddatabinding',
     extend: 'Ext.ux.plugin.DataBinding',
@@ -813,6 +836,8 @@ Ext.define('Ext.ux.plugin.GridDataBinding', {
 
 
 ///#source 1 1 /src/plugin/ReadOnlyLatching.js
+//https://github.com/slimjack/ExtJs-AsyncModel
+
 Ext.define('Ext.ux.plugin.ReadOnlyLatching', {
     alias: 'plugin.readonlylatching',
     extend: 'Ext.AbstractPlugin',
@@ -847,6 +872,8 @@ Ext.define('Ext.ux.plugin.ReadOnlyLatching', {
     }
 });
 ///#source 1 1 /src/validator/BoundOverride.js
+//https://github.com/slimjack/ExtJs-AsyncModel
+
 Ext.override('Ext.data.validator.Bound', {
     autoTrim: true,
     getValue: function (fieldValue) {
@@ -878,6 +905,8 @@ Ext.override('Ext.data.validator.Bound', {
     }
 });
 ///#source 1 1 /src/validator/MetaDataValidatorMapper.js
+//https://github.com/slimjack/ExtJs-AsyncModel
+
 Ext.define('Ext.ux.validator.MetaDataValidatorMapper', {
     alternateClassName: 'MetaDataValidatorMapper',
     singleton: true,
@@ -900,6 +929,8 @@ Ext.define('Ext.ux.validator.MetaDataValidatorMapper', {
 });
 
 ///#source 1 1 /src/validator/ParametrizedValidator.js
+//https://github.com/slimjack/ExtJs-AsyncModel
+
 Ext.define('Ext.data.validator.ParametrizedValidator', {
     extend: 'Ext.data.validator.Validator',
     alias: 'data.validator.baseparametrizedvalidator',
@@ -915,6 +946,8 @@ Ext.define('Ext.data.validator.ParametrizedValidator', {
     }
 });
 ///#source 1 1 /src/validator/Required.js
+//https://github.com/slimjack/ExtJs-AsyncModel
+
 Ext.define('Ext.data.validator.Required', {
     extend: 'Ext.data.validator.ParametrizedValidator',
     alias: 'data.validator.required',
@@ -953,6 +986,8 @@ Ext.define('Ext.data.validator.Required', {
     }
 });
 ///#source 1 1 /src/field/AsyncModel.js
+//https://github.com/slimjack/ExtJs-AsyncModel
+
 Ext.define('Ext.ux.data.field.AsyncModel', {
     extend: 'Ext.data.field.Field',
 
@@ -987,6 +1022,8 @@ Ext.define('Ext.ux.data.field.AsyncModel', {
     }
 });
 ///#source 1 1 /src/field/AsyncStore.js
+//https://github.com/slimjack/ExtJs-AsyncModel
+
 Ext.define('Ext.ux.data.field.AsyncStore', {
     extend: 'Ext.data.field.Field',
 
@@ -1033,6 +1070,8 @@ Ext.define('Ext.ux.data.field.AsyncStore', {
     }
 });
 ///#source 1 1 /src/AsyncModel.js
+//https://github.com/slimjack/ExtJs-AsyncModel
+
 Ext.define('Ext.ux.data.AsyncModel', {
     extend: 'Ext.data.Model',
 
@@ -2130,7 +2169,9 @@ Ext.data.Model.addStatics({
     VALIDATED: 'validated'
 });
 ///#source 1 1 /src/AsyncStore.js
-//Ext.ux.data.AsyncStore must be used only with Ext.ux.data.AsyncModel
+//https://github.com/slimjack/ExtJs-AsyncModel
+
+//Ext.ux.data.AsyncStore can be used only with Ext.ux.data.AsyncModel
 Ext.define('Ext.ux.data.AsyncStore', {
     extend: 'Ext.data.Store',
     selectionModel: null,

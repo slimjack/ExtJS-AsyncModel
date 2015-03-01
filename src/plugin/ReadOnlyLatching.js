@@ -1,4 +1,6 @@
-﻿Ext.define('Ext.ux.plugin.ReadOnlyLatching', {
+﻿//https://github.com/slimjack/ExtJs-AsyncModel
+
+Ext.define('Ext.ux.plugin.ReadOnlyLatching', {
     alias: 'plugin.readonlylatching',
     extend: 'Ext.AbstractPlugin',
 

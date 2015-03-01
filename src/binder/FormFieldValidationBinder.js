@@ -1,4 +1,6 @@
-﻿Ext.define('Ext.ux.binder.FormFieldValidationBinder', {
+﻿//https://github.com/slimjack/ExtJs-AsyncModel
+
+Ext.define('Ext.ux.binder.FormFieldValidationBinder', {
     extend: 'Ext.ux.binder.AbstractFormFieldBinder',
     metaDataName: 'validationErrorMessage',
 
