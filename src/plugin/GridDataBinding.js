@@ -14,7 +14,7 @@ Ext.define('Ext.ux.plugin.GridDataBinding', {
     init: function (grid) {
         var me = this;
         me.mixins.observable.constructor.call(me);
-        if (!grid.findPlugin(ptype)) {
+        if (!grid.findPlugin('gridstorereconfiguring')) {
             grid.addPlugin('gridstorereconfiguring');
         }
 
