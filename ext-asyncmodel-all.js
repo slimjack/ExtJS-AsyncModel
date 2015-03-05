@@ -605,42 +605,6 @@ Ext.define('Ext.ux.plugin.DataBinding', {
 });
 
 
-///#source 1 1 /src/plugin/ExternalValidating.js
-//https://github.com/slimjack/ExtJs-AsyncModel
-
-Ext.define('Ext.ux.plugin.ExternalValidating', {
-    alias: 'plugin.externalvalidating',
-    extend: 'Ext.AbstractPlugin',
-
-    init: function (formField) {
-        var me = this;
-        me._externalErrors = {};
-        if (!formField.isFormField) {
-            Ext.Error.raise('ExternalValidating plugin may be applied only to form fields');
-        }
-        Ext.override(formField, {
-            getErrors: function() {
-                var errors = this.callParent(arguments);
-                Ext.Object.each(me._externalErrors, function (sourceName, errorMessage) {
-                    if (errorMessage) {
-                        Ext.Array.include(errors, errorMessage);
-                    }
-                });
-                return errors;
-            },
-
-            setExternalError: function (sourceName, errorMessage) {
-                me._externalErrors[sourceName] = errorMessage;
-                formField.validate();
-            },
-
-            setExternalErrors: function (errors) {
-                Ext.apply(me._externalErrors, errors);
-                formField.validate();
-            }
-        });
-    }
-});
 ///#source 1 1 /src/plugin/GridDataBinding.js
 //https://github.com/slimjack/ExtJs-AsyncModel
 
@@ -655,9 +619,13 @@ Ext.define('Ext.ux.plugin.GridDataBinding', {
         'Ext.util.Observable'
     ],
 
-    init: function () {
+    init: function (grid) {
         var me = this;
         me.mixins.observable.constructor.call(me);
+        if (!grid.findPlugin(ptype)) {
+            grid.addPlugin('gridstorereconfiguring');
+        }
+
         me.callParent(arguments);
     },
 
@@ -835,42 +803,6 @@ Ext.define('Ext.ux.plugin.GridDataBinding', {
 });
 
 
-///#source 1 1 /src/plugin/ReadOnlyLatching.js
-//https://github.com/slimjack/ExtJs-AsyncModel
-
-Ext.define('Ext.ux.plugin.ReadOnlyLatching', {
-    alias: 'plugin.readonlylatching',
-    extend: 'Ext.AbstractPlugin',
-
-    init: function (formField) {
-        var me = this;
-        var readOnlyLatched = false;
-        var originalReadOnlyState = false;
-        if (!formField.isFormField) {
-            Ext.Error.raise('ReadOnlyLatching plugin may be applied only to form fields');
-        }
-        Ext.override(formField, {
-            setReadOnly: function (readOnly) {
-                if (!readOnlyLatched) {
-                    this.callParent(arguments);
-                }
-                originalReadOnlyState = readOnly;
-            },
-
-            latchReadOnly: function () {
-                var temReadonly = originalReadOnlyState;
-                formField.setReadOnly(true);
-                readOnlyLatched = true;
-                originalReadOnlyState = temReadonly;
-            },
-
-            unlatchReadOnly: function () {
-                readOnlyLatched = false;
-                formField.setReadOnly(originalReadOnlyState);
-            }
-        });
-    }
-});
 ///#source 1 1 /src/validator/BoundOverride.js
 //https://github.com/slimjack/ExtJs-AsyncModel
 
