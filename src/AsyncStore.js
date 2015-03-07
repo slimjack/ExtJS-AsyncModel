@@ -54,12 +54,8 @@ Ext.define('Ext.ux.data.AsyncStore', {
         Ext.Array.erase(me._validationCallbacks, 0, me._validationCallbacks.length);
     },
 
-    validate: function (validatePresence, callback) {
+    validate: function (options, callback) {
         var me = this;
-        if (!validatePresence && me.isValidated()) {
-            Ext.callback(callback, null, [me.isValid()]);
-            return;
-        }
         if (callback) {
             me._validationCallbacks.push(callback);
         }
@@ -67,24 +63,28 @@ Ext.define('Ext.ux.data.AsyncStore', {
             return;
         }
         var syncCounter = me.count();
-        var recordValidationCallback = function () {
+        var resultErrorMessages = [];
+        var resultInfoMessages = [];
+        var recordValidationCallback = function (errorMessages, infoMessages) {
+            resultErrorMessages = resultErrorMessages.concat(errorMessages);
+            resultInfoMessages = resultInfoMessages.concat(infoMessages);
             syncCounter--;
             if (syncCounter === 0) {
                 me.isValidating = false;
                 if (me.isValidated()) {
-                    me.onStoreValidated(me.isValid());
+                    me.onStoreValidated(resultErrorMessages, resultInfoMessages);
                 } else {
-                    me.validate(validatePresence);
+                    me.validate(options);
                 }
             }
         };
         if (syncCounter) {
             me.isValidating = true;
             me.each(function (record) {
-                record.validate(validatePresence, recordValidationCallback);
+                record.validate(options, recordValidationCallback);
             });
         } else {
-            me.onStoreValidated(true);
+            me.onStoreValidated(resultErrorMessages, resultInfoMessages);
         }
     },
 
@@ -155,10 +155,10 @@ Ext.define('Ext.ux.data.AsyncStore', {
         Ext.Array.erase(me._businessLogicSyncCallbacks, 0, me._businessLogicSyncCallbacks.length);
     },
 
-    onStoreValidated: function (isValid) {
+    onStoreValidated: function (resultErrorMessages, resultInfoMessages) {
         var me = this;
         Ext.each(me._validationCallbacks, function (validationCallback) {
-            Ext.callback(validationCallback, isValid);
+            validationCallback(resultErrorMessages, resultInfoMessages);
         });
         Ext.Array.erase(me._validationCallbacks, 0, me._validationCallbacks.length);
     },

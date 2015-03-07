@@ -2,13 +2,13 @@
 
 Ext.define('Ext.ux.binder.FormFieldValidationBinder', {
     extend: 'Ext.ux.binder.AbstractFormFieldBinder',
-    metaDataName: 'validationErrorMessage',
+    metaDataName: 'validationErrorMessages',
 
     onComponentBound: function (formField, model, modelFieldName) {
         this.applyPlugin(formField, 'externalvalidating');
     },
 
     applyMetaData: function (control, metaValue, model, fieldName) {
-        control.setExternalError('modelValidation', metaValue);
+        control.setExternalErrors('modelValidation', metaValue);
     }
 });
