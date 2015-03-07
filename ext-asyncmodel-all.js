@@ -215,10 +215,10 @@ Ext.define('Ext.ux.plugin.DataBinding', {
         me._owner = owner;
         me._formFields = new DynamicComponentQuery(me._owner, '[isFormField][name]:not([excludeForm]), [isFormField][dataField]:not([excludeForm])', '[isBindable] [isFormField], [isFormField] [isFormField]');
         me._bindableControls = new DynamicComponentQuery(me._owner, '[isBindable][dataField]', '[isBindable]:not([dataField]) [isBindable]');
-        me._formFields.on('queryadd', me.onFormFieldsAdded, me);
-        me._formFields.on('queryremove', me.onFormFieldsRemoved, me);
-        me._bindableControls.on('queryadd', me.onBindableControlsAdded, me);
-        me._bindableControls.on('queryremove', me.onBindableControlsRemoved, me);
+        me._formFields.on('componentsadd', me.onFormFieldsAdded, me);
+        me._formFields.on('componentsremove', me.onFormFieldsRemoved, me);
+        me._bindableControls.on('componentsadd', me.onBindableControlsAdded, me);
+        me._bindableControls.on('componentsremove', me.onBindableControlsRemoved, me);
         me.applyBindableInterfaceToOwner();
     },
 
@@ -253,20 +253,20 @@ Ext.define('Ext.ux.plugin.DataBinding', {
     //region Private methods
     bindModel: function (model) {
         var me = this;
-        me.model = model;
+        me._model = model;
         me.bindFormFields();
         me.bindBindableControls();
 
-        me._owner.fireEvent('modelbound', me._owner, me.model);
+        me._owner.fireEvent('modelbound', me._owner, me._model);
     },
 
     clearBinding: function () {
         var me = this;
-        if (me.model) {
+        if (me._model) {
             me.unbindFormFields();
             me.unbindBindableControls();
-            var model = me.model;
-            me.model = null;
+            var model = me._model;
+            delete me._model;
             me._owner.fireEvent('modelunbound', me._owner, model);
         }
     },
@@ -288,16 +288,20 @@ Ext.define('Ext.ux.plugin.DataBinding', {
 
     onFormFieldsAdded: function (addedFormFields) {
         var me = this;
-        Ext.Array.each(addedFormFields, function (formField) {
-            me.bindFormField(formField);
-        });
+        if (me._model) {
+            Ext.Array.each(addedFormFields, function (formField) {
+                me.bindFormField(formField);
+            });
+        }
     },
 
     onFormFieldsRemoved: function (removedFormFields) {
         var me = this;
-        Ext.Array.each(removedFormFields, function (formField) {
-            me.unbindFormField(formField);
-        });
+        if (me._model) {
+            Ext.Array.each(removedFormFields, function(formField) {
+                me.unbindFormField(formField);
+            });
+        }
     },
 
     bindFormField: function (formField) {
@@ -345,7 +349,7 @@ Ext.define('Ext.ux.plugin.DataBinding', {
         me.unsubscribeFormField(formField);
         me._formFieldsMap.remove(formField.dataField, formFieldRecord);
 
-        var model = me._modelFieldsMap[formField.dataField].model;
+        var model = me._modelFieldsMap[formField.dataField]._model;
         var modelFieldPathElements = formField.dataField.split('.');
         var modelFieldName = modelFieldPathElements[modelFieldPathElements.length - 1];
         if (!me._formFieldsMap.get(formField.dataField).length) {
@@ -411,16 +415,20 @@ Ext.define('Ext.ux.plugin.DataBinding', {
 
     onBindableControlsAdded: function (addedBindableControls) {
         var me = this;
-        Ext.Array.each(addedBindableControls, function (bindableControl) {
-            me.bindBindableControl(bindableControl);
-        });
+        if (me._model) {
+            Ext.Array.each(addedBindableControls, function(bindableControl) {
+                me.bindBindableControl(bindableControl);
+            });
+        }
     },
 
     onBindableControlsRemoved: function (removedBindableControls) {
         var me = this;
-        Ext.Array.each(removedBindableControls, function (bindableControl) {
-            me.unbindBindableControl(bindableControl);
-        });
+        if (me._model) {
+            Ext.Array.each(removedBindableControls, function(bindableControl) {
+                me.unbindBindableControl(bindableControl);
+            });
+        }
     },
 
     bindBindableControl: function (bindableControl) {
@@ -459,7 +467,7 @@ Ext.define('Ext.ux.plugin.DataBinding', {
         bindableControl.clearModelBinding();
         me._bindableControlsMap.remove(bindableControl.dataField, bindableControl);
 
-        var model = me._modelFieldsMap[bindableControl.dataField].model;
+        var model = me._modelFieldsMap[bindableControl.dataField]._model;
         var modelFieldPathElements = bindableControl.dataField.split('.');
         var modelFieldName = modelFieldPathElements[modelFieldPathElements.length - 1];
         if (!me._bindableControlsMap.get(bindableControl.dataField).length) {
@@ -516,7 +524,7 @@ Ext.define('Ext.ux.plugin.DataBinding', {
             me._formFieldsMap.eachForKey(fieldName, function (formFieldRecord) {
                 var metaDataBinder = formFieldRecord.metaDataBindersMap[metaDataFieldName];
                 if (metaDataBinder) {
-                    metaDataBinder.applyMetaData(formFieldRecord.formField, metaValue, modelFieldRecord.model, modelFieldRecord.modelFieldName);
+                    metaDataBinder.applyMetaData(formFieldRecord.formField, metaValue, modelFieldRecord._model, modelFieldRecord.modelFieldName);
                 }
             });
         }
@@ -529,7 +537,7 @@ Ext.define('Ext.ux.plugin.DataBinding', {
             me._bindableControlsMap.eachForKey(fieldPath, function(controlRecord) {
                 var metaDataBinder = controlRecord.metaDataBindersMap[metaDataFieldName];
                 if (metaDataBinder) {
-                    metaDataBinder.applyMetaData(controlRecord.formField, metaValue, modelFieldRecord.model, modelFieldRecord.modelFieldName);
+                    metaDataBinder.applyMetaData(controlRecord.formField, metaValue, modelFieldRecord._model, modelFieldRecord.modelFieldName);
                 }
             });
         }
@@ -572,7 +580,7 @@ Ext.define('Ext.ux.plugin.DataBinding', {
         }
         me.ignoredFormField = formField;
         var modelFieldRecord = me._modelFieldsMap[formField.dataField];
-        modelFieldRecord.model.set(modelFieldRecord.modelFieldName, formField.getValue());
+        modelFieldRecord._model.set(modelFieldRecord.modelFieldName, formField.getValue());
         me.ignoredFormField = null;
     },
 
@@ -591,7 +599,7 @@ Ext.define('Ext.ux.plugin.DataBinding', {
     getFieldModel: function (modelFieldPath) {
         var me = this;
         var modelFieldPathElements = modelFieldPath.split('.');
-        var fieldOwner = me.model;
+        var fieldOwner = me._model;
         var fieldOwnerPathDepth = modelFieldPathElements.length - 1;
         var fieldName = modelFieldPathElements[modelFieldPathElements.length - 1];
         for (var i = 0; i < fieldOwnerPathDepth; i++) {
