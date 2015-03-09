@@ -161,7 +161,7 @@ Ext.define('Ext.ux.plugin.DataBinding', {
         me.unsubscribeFormField(formField);
         me._formFieldsMap.remove(formField.dataField, formFieldRecord);
 
-        var model = me._modelFieldsMap[formField.dataField]._model;
+        var model = me._modelFieldsMap[formField.dataField].model;
         var modelFieldPathElements = formField.dataField.split('.');
         var modelFieldName = modelFieldPathElements[modelFieldPathElements.length - 1];
         if (!me._formFieldsMap.get(formField.dataField).length) {
@@ -279,7 +279,7 @@ Ext.define('Ext.ux.plugin.DataBinding', {
         bindableControl.clearModelBinding();
         me._bindableControlsMap.remove(bindableControl.dataField, bindableControl);
 
-        var model = me._modelFieldsMap[bindableControl.dataField]._model;
+        var model = me._modelFieldsMap[bindableControl.dataField].model;
         var modelFieldPathElements = bindableControl.dataField.split('.');
         var modelFieldName = modelFieldPathElements[modelFieldPathElements.length - 1];
         if (!me._bindableControlsMap.get(bindableControl.dataField).length) {
@@ -336,7 +336,7 @@ Ext.define('Ext.ux.plugin.DataBinding', {
             me._formFieldsMap.eachForKey(fieldName, function (formFieldRecord) {
                 var metaDataBinder = formFieldRecord.metaDataBindersMap[metaDataFieldName];
                 if (metaDataBinder) {
-                    metaDataBinder.applyMetaData(formFieldRecord.formField, metaValue, modelFieldRecord._model, modelFieldRecord.modelFieldName);
+                    metaDataBinder.applyMetaData(formFieldRecord.formField, metaValue, modelFieldRecord.model, modelFieldRecord.modelFieldName);
                 }
             });
         }
@@ -349,7 +349,7 @@ Ext.define('Ext.ux.plugin.DataBinding', {
             me._bindableControlsMap.eachForKey(fieldPath, function(controlRecord) {
                 var metaDataBinder = controlRecord.metaDataBindersMap[metaDataFieldName];
                 if (metaDataBinder) {
-                    metaDataBinder.applyMetaData(controlRecord.formField, metaValue, modelFieldRecord._model, modelFieldRecord.modelFieldName);
+                    metaDataBinder.applyMetaData(controlRecord.formField, metaValue, modelFieldRecord.model, modelFieldRecord.modelFieldName);
                 }
             });
         }
@@ -392,7 +392,7 @@ Ext.define('Ext.ux.plugin.DataBinding', {
         }
         me.ignoredFormField = formField;
         var modelFieldRecord = me._modelFieldsMap[formField.dataField];
-        modelFieldRecord._model.set(modelFieldRecord.modelFieldName, formField.getValue());
+        modelFieldRecord.model.set(modelFieldRecord.modelFieldName, formField.getValue());
         me.ignoredFormField = null;
     },
 
