@@ -1092,7 +1092,7 @@ Ext.define('Ext.ux.data.AsyncModel', {
     initFields: function () {
         var me = this;
         var data = me.data;
-        Ext.Array.each(me.fields, function (field) {
+        Ext.Array.forEach(me.fields, function (field) {
             if (field.isStoreField || field.isModelField) {
                 if (!data[field.name]) {
                     data[field.name] = field.convert(null, me);
@@ -1116,7 +1116,7 @@ Ext.define('Ext.ux.data.AsyncModel', {
         var me = this;
         me._metaDataModel = Ext.apply({}, me.metaDataModel, me._defaultMetaDataModel);
         me._metaData = {};
-        Ext.Array.each(me.fields, function (field) {
+        Ext.Array.forEach(me.fields, function (field) {
             if (field.name !== me.idProperty) {
                 me._metaData[field.name] = {};
                 Ext.Object.each(me._metaDataModel, function (metaName, metaValue) {
@@ -1139,7 +1139,7 @@ Ext.define('Ext.ux.data.AsyncModel', {
         var emptyOptions = JSON.stringify({});
         me._validationModel = {};
         me._validationRules = {};
-        Ext.Array.each(me.fields, function (field) {
+        Ext.Array.forEach(me.fields, function (field) {
             if (field.name !== me.idProperty) {
                 me._validationModel[field.name] = {
                     isValidated: true,
@@ -1158,7 +1158,7 @@ Ext.define('Ext.ux.data.AsyncModel', {
         var me = this;
         me._businessRuleCompletedCallback = Ext.bind(me.onBusinessRuleCompleted, me);
         me._businessRules = {};
-        Ext.Array.each(me.fields, function (field) {
+        Ext.Array.forEach(me.fields, function (field) {
             if (field.name === me.idProperty) { return; }
 
             var changeRuleName = field.name + 'Change';
@@ -1188,7 +1188,7 @@ Ext.define('Ext.ux.data.AsyncModel', {
     syncWithBusinessRules: function (callback) {
         var me = this;
         me._businessRulesSyncCounter += (me.fields.length - 1);
-        Ext.Array.each(me.fields, function (field) {
+        Ext.Array.forEach(me.fields, function (field) {
             if (field.name === me.idProperty) { return; }
             if (field.isStoreField || field.isModelField) {
                 me.get(field.name).syncWithBusinessRules(me._businessRuleCompletedCallback);
@@ -1215,11 +1215,11 @@ Ext.define('Ext.ux.data.AsyncModel', {
             me.resetMetaData();
             me.clearAllFields();
             me.beginEdit();
-            me.fields.each(function (field) {
+            Ext.Array.forEach(me.fields, function (field) {
                 if (field.isStoreField || field.isModelField) {
-                    me.set(field.name, data[field.name]);
-                } else {
                     me.get(field.name).loadData(data[field.name]);
+                } else {
+                    me.set(field.name, data[field.name]);
                 }
             });
             me.endEdit();
@@ -1293,7 +1293,7 @@ Ext.define('Ext.ux.data.AsyncModel', {
                     fieldCallback([errorMessage], [infoMessage]);
                 });
             }
-            Ext.Array.each(me.fields, function (field) {
+            Ext.Array.forEach(me.fields, function (field) {
                 if (field.name === me.idProperty) { return; }
                 me.validateField(field.name, options, fieldCallback);
                 if (field.isStoreField || field.isModelField) {
@@ -1313,7 +1313,7 @@ Ext.define('Ext.ux.data.AsyncModel', {
         var me = this;
         me._errorMessage = '';
         me._infoMessage = '';
-        Ext.Array.each(me.fields, function (field) {
+        Ext.Array.forEach(me.fields, function (field) {
             if (field.name === me.idProperty) { return; }
 
             me.resetFieldValidation(field.name);
@@ -1364,12 +1364,12 @@ Ext.define('Ext.ux.data.AsyncModel', {
         return isValid;
     },
 
-    setMeta: function (fieldName, metaDataFieldName, value, suppressValidation) {
+    setMeta: function(fieldName, metaDataFieldName, value) {
         var me = this;
         if (metaDataFieldName === 'validationErrorMessages' || metaDataFieldName === 'validationInfoMessages') {
             Ext.Error.raise('Direct set of "validationErrorMessages" or "validationInfoMessages" is forbidden');
         }
-        me.setMetaInternal(fieldName, metaDataFieldName, value, suppressValidation);
+        me.setMetaInternal(fieldName, metaDataFieldName, value);
     },
 
     setDefaultMeta: function (fieldName, metaDataFieldName, value, suppressValidation) {
@@ -1388,10 +1388,10 @@ Ext.define('Ext.ux.data.AsyncModel', {
 
     resetMetaData: function () {
         var me = this;
-        Ext.Array.each(me.fields, function (field) {
+        Ext.Array.forEach(me.fields, function (field) {
             if (field.name !== me.idProperty) {
                 Ext.Object.each(me._metaData[field.name], function (metaName) {
-                    if (metaName !== 'validationErrorMessages' || metaName !== 'validationInfoMessages') {
+                    if (metaName !== 'validationErrorMessages' && metaName !== 'validationInfoMessages') {
                         me.setMeta(field.name, metaName, field[metaName]);
                     }
                 });
@@ -1422,7 +1422,7 @@ Ext.define('Ext.ux.data.AsyncModel', {
     getAllValidationInfo: function () {
         var me = this;
         var result = {};
-        Ext.Object.each(me.validationModel, function (fieldName, validationInfo) {
+        Ext.Object.each(me._validationModel, function (fieldName, validationInfo) {
             result[fieldName] = me.getFieldValidationInfo(fieldName);
         });
         return result;
@@ -1545,7 +1545,7 @@ Ext.define('Ext.ux.data.AsyncModel', {
         var result = me.callParent(arguments);
         delete result[me.idProperty];
         var thisModelData = me.data;
-        Ext.Array.each(me.fields, function (field) {
+        Ext.Array.forEach(me.fields, function (field) {
             if (field.name === me.idProperty) { return; }
             if (options.includeViewFields || !me.getMeta(field.name, 'viewField')) {
 
@@ -1564,7 +1564,7 @@ Ext.define('Ext.ux.data.AsyncModel', {
         me.callParent(arguments);
         if (!ignoreNested) {
             var thisModelData = me.data;
-            Ext.Array.each(me.fields, function (field) {
+            Ext.Array.forEach(me.fields, function (field) {
                 if (field.isModelField) {
                     thisModelData[field.name].commit(silent);
                 } else if (field.isStoreField) {
@@ -1589,7 +1589,7 @@ Ext.define('Ext.ux.data.AsyncModel', {
         me.callParent(arguments);
         if (!ignoreNested) {
             var thisModelData = me.data;
-            Ext.Array.each(me.fields, function (field) {
+            Ext.Array.forEach(me.fields, function (field) {
                 if (field.isModelField) {
                     thisModelData[field.name].reject(silent);
                 } else if (field.isStoreField) {
@@ -1633,7 +1633,7 @@ Ext.define('Ext.ux.data.AsyncModel', {
 
     resetFieldValidation: function (fieldName) {
         var me = this;
-        var fieldValidationModel = me.validationModel[fieldName];
+        var fieldValidationModel = me._validationModel[fieldName];
         Ext.Array.erase(fieldValidationModel.callbacks, 0, fieldValidationModel.callbacks.length);
         me._suppressValidChangeEvent = true;
         me.resetValidationMessages(fieldName);
@@ -1889,7 +1889,7 @@ Ext.define('Ext.ux.data.AsyncModel', {
     clearAllFields: function (excludedFields) {
         var me = this;
         me.beginEdit();
-        Ext.Array.each(me.fields, function (field) {
+        Ext.Array.forEach(me.fields, function (field) {
             if (field.name !== me.idProperty) {
                 if (!excludedFields || !Ext.Array.contains(excludedFields, field.name)) {
                     me.clearField(field.name);
@@ -1931,7 +1931,7 @@ Ext.define('Ext.ux.data.AsyncModel', {
     getNumOfComplexFields: function () {
         var me = this;
         var result = 0;
-        Ext.Array.each(me.fields, function (field) {
+        Ext.Array.forEach(me.fields, function (field) {
             if ((field.name !== me.idProperty) && (field.isModelField || field.isStoreField)) {
                 result++;
             }
