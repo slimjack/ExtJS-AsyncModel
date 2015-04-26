@@ -1340,7 +1340,7 @@ Ext.define('Ext.ux.data.AsyncModel', {
         var me = this;
         var result = [];
         var field = me.getField(fieldName);
-        Ext.Object.each(me._metaDataModel, function (metaDataName) {
+        Ext.Array.forEach(me.getMetaDataNames(), function (metaDataName) {
             if (me._metaDataValidatorsMap[metaDataName]) {
                 var validator = me.createMappedValidator(field, me._metaDataValidatorsMap[metaDataName]);
                 result.push(validator);
