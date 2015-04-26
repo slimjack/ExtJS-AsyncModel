@@ -9,7 +9,7 @@ Ext.define('Ext.ux.binder.GridValidationBinder', {
 
     onRender: function(metadata, record, rowIndex, colIndex, store, view) {
         var dataIndex = metadata.column.dataIndex;
-        var validationErrorMessages = record.getMeta(dataIndex, 'validationErrorMessages');
+        var validationErrorMessages = record.getMetaValue(dataIndex, 'validationErrorMessages');
         if (validationErrorMessages.length) {
             metadata.tdCls += ' ' + this.invalidCellCls;
             metadata.tdAttr = 'data-errorqtip="' + validationErrorMessages.join('</br>') + '"';

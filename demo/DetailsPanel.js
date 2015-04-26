@@ -4,17 +4,11 @@
     layout: {
         type: 'vbox'
     },
-    plugins: ['databinding'],
     controller: 'details',
-
-    listeners: {
-        modelbound: 'onModelBound'
-    },
 
     items: [{
         xtype: 'container',
         reference: 'metacontrols',
-        disabled: true,
         layout: 'hbox',
         defaults: {
             margin: 5
@@ -77,6 +71,7 @@
         items: [{
             xtype: 'textfield',
             name: 'field1',
+            bind: '{curChild.field1}',
             fieldLabel: 'Field 1',
             width: 300
         }, {
@@ -92,6 +87,7 @@
         },
         items: [{
             xtype: 'textfield',
+            bind: '{curChild.field2}',
             name: 'field2',
             fieldLabel: 'Field 2',
             width: 300
@@ -108,6 +104,7 @@
         },
         items: [{
             xtype: 'textfield',
+            bind: '{curChild.field3}',
             name: 'field3',
             fieldLabel: 'Field 3',
             width: 300

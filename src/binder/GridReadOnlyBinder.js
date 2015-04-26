@@ -16,7 +16,7 @@ Ext.define('Ext.ux.binder.GridReadOnlyBinder', {
     onRender: function(metadata, record, rowIndex, colIndex, store, view) {},
 
     onBeforeCellEdit: function (plugin, context) {
-        var isEditable = !context.record.getMeta(context.column.dataIndex, 'readOnly');
+        var isEditable = !context.record.getMetaValue(context.column.dataIndex, 'readOnly');
         return isEditable;
     }
 

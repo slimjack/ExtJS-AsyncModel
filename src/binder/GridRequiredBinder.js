@@ -10,7 +10,7 @@ Ext.define('Ext.ux.binder.GridRequiredBinder', {
     onRender: function(metadata, record, rowIndex, colIndex, store, view) {
         var dataIndex = metadata.column.dataIndex;
 
-        if (record.getMeta(dataIndex, 'required')) {
+        if (record.getMetaValue(dataIndex, 'required')) {
             metadata.tdCls += ' ' + this.requiredCellCls;
         }
     }

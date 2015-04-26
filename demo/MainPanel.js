@@ -4,7 +4,8 @@
     layout: {
         type: 'vbox'
     },
-    plugins: ['databinding'],
+    viewModel: 'test',
+    plugins: ['metadatabinding'],
     controller: 'demo',
     defaults: {
         width: 800
@@ -71,6 +72,7 @@
             xtype: 'textfield',
             name: 'field1',
             fieldLabel: 'Field 1',
+            bind: '{model.field1}',
             width: 300
         }, {
             xtype: 'label',
@@ -86,6 +88,7 @@
         items: [{
             xtype: 'textfield',
             name: 'field2',
+            bind: '{model.field2}',
             fieldLabel: 'Field 2',
             width: 300
         }, {
@@ -102,6 +105,7 @@
         items: [{
             xtype: 'textfield',
             name: 'field1',
+            bind: '{model.field1}',
             fieldLabel: 'One more field 1',
             width: 300
         }, {
@@ -118,6 +122,7 @@
         items: [{
             xtype: 'textfield',
             name: 'field2',
+            bind: '{model.field2}',
             fieldLabel: 'One more field 2',
             width: 300
         }, {
@@ -134,6 +139,7 @@
         items: [{
             xtype: 'checkbox',
             name: 'field3',
+            bind: '{model.meta.field2.readOnly}',
             fieldLabel: 'Field 3',
             width: 300
         }, {
@@ -143,12 +149,7 @@
         }]
     }, {
         xtype: 'demogrid',
-        height: 200,
-        dataField: 'field4',
-        storeDataField: 'field4',
-        listeners: {
-            selectionchange: 'onSelected'
-        }
+        height: 200
     }, {
         xtype: 'detailspanel',
         reference: 'details',

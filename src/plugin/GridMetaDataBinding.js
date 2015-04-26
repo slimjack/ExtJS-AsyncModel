@@ -1,8 +1,8 @@
 ﻿//https://github.com/slimjack/ExtJs-AsyncModel
 
-Ext.define('Ext.ux.plugin.GridDataBinding', {
-    alias: 'plugin.griddatabinding',
-    extend: 'Ext.ux.plugin.DataBinding',
+Ext.define('Ext.ux.plugin.GridMetaDataBinding', {
+    alias: 'plugin.gridmetadatabinding',
+    extend: 'Ext.AbstractPlugin',
     inject: {
         gridMetaDataBinders: 'IGridMetaDataBinder[]'
     },
@@ -13,12 +13,10 @@ Ext.define('Ext.ux.plugin.GridDataBinding', {
 
     init: function (grid) {
         var me = this;
+        me._owner = grid;
         me.mixins.observable.constructor.call(me);
-        if (!grid.findPlugin('gridstorereconfiguring')) {
-            grid.addPlugin('gridstorereconfiguring');
-        }
-
         me.callParent(arguments);
+        me.initBinders();
     },
 
     initBinders: function() {
@@ -48,54 +46,6 @@ Ext.define('Ext.ux.plugin.GridDataBinding', {
         }
     },
 
-    applyBindableInterfaceToOwner: function () {
-        var me = this;
-        me.callParent(arguments);
-        Ext.apply(me._owner, {
-            //'model' must be an instance of 'Ext.ux.data.AsyncModel'
-            bindModel: function (model) {
-                if (!(model instanceof Ext.ux.data.AsyncStore) && !(model instanceof Ext.ux.data.AsyncModel)) {
-                    Ext.Error.raise(Ext.create('ArgumentTypeException', { msg: owner.$className + '.bindModel method accepts only "Ext.ux.data.AsyncStore" type' }));
-                }
-                if (model instanceof Ext.ux.data.AsyncStore) {
-                    this.clearModelBinding();
-                    me.bindStore(model);
-                } else {
-                    this.clearModelBinding();
-                    if (me._owner.storeDataField) {
-                        me.bindStore(model.get(me._owner.storeDataField));
-                    }
-                    me.bindModel(model);
-                }
-            }
-        });
-    },
-
-    bindStore: function (store) {
-        var me = this;
-        me.initBinders();
-        me._store = store;
-        me._originalStore = me._owner.store;
-        me._storebinding = true;
-        me._owner.reconfigure(store);
-        me._storebinding = false;
-        me._owner.fireEvent('storebound', me._owner, store);
-    },
-
-    clearBinding: function () {
-        var me = this;
-        me.callParent(arguments);
-        if (me._store) {
-            me._storebinding = true;
-            me._owner.reconfigure(me._originalStore);
-            me._storebinding = false;
-            var store = me._store;
-            me._store = null;
-            me._originalStore = null;
-            me._owner.fireEvent('storeunbound', me._owner, store);
-        }
-    },
-
     getMetaDataMap: function (grid) {
         var columns = grid.columns;
         var metaDataMap = null;
@@ -115,9 +65,6 @@ Ext.define('Ext.ux.plugin.GridDataBinding', {
         var me = this;
         if (columns) {
             me.overrideColumnRenderers();
-        }
-        if (store && !me._storebinding) {
-            Ext.Error.raise('Reconfiguring with store is forbidden for bindable grid');
         }
     },
 
