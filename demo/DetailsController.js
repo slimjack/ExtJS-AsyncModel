@@ -2,55 +2,60 @@
     extend: 'Deft.mvc.ViewController',
     alias: 'controller.details',
 
-    onModelBound: function (view, model) {
-        this.lookupReference('metacontrols').setDisabled(false);
-        this.model = model;
-        this.updateMetaControls();
-    },
-
-    onModelUnbound: function (view, model) {
-        this.lookupReference('metacontrols').setDisabled(true);
-        this.model = null;
+    init: function() {
+        var me = this;
+        Ext.defer(function() {
+            me.lookupReference('metacontrols').setDisabled(true);
+            me.getViewModel().bind('{curChild}', function (curChild) {
+                me.updateMetaControls();
+                if (curChild) {
+                    me.lookupReference('metacontrols').setDisabled(false);
+                }
+            });
+        }, 5);
     },
 
     onField1RequiredChange: function (ctrl, value) {
-        if (!this.model) return;
-        this.model.setMeta('field1', 'required', value);
+        var model = this.getViewModel().get('curChild');
+        model.setMetaValue('field1', 'required', value);
     },
 
     onField1ReadOnlyChange: function (ctrl, value) {
-        if (!this.model) return;
-        this.model.setMeta('field1', 'readOnly', value);
+        var model = this.getViewModel().get('curChild');
+        model.setMetaValue('field1', 'readOnly', value);
     },
 
     onField2RequiredChange: function (ctrl, value) {
-        if (!this.model) return;
-        this.model.setMeta('field2', 'required', value);
+        var model = this.getViewModel().get('curChild');
+        model.setMetaValue('field2', 'required', value);
     },
 
     onField2ReadOnlyChange: function (ctrl, value) {
-        if (!this.model) return;
-        this.model.setMeta('field2', 'readOnly', value);
+        var model = this.getViewModel().get('curChild');
+        model.setMetaValue('field2', 'readOnly', value);
     },
 
     onField3RequiredChange: function (ctrl, value) {
-        if (!this.model) return;
-        this.model.setMeta('field3', 'required', value);
+        var model = this.getViewModel().get('curChild');
+        model.setMetaValue('field3', 'required', value);
     },
 
     onField3ReadOnlyChange: function (ctrl, value) {
-        if (!this.model) return;
-        this.model.setMeta('field3', 'readOnly', value);
+        var model = this.getViewModel().get('curChild');
+        model.setMetaValue('field3', 'readOnly', value);
     },
 
     updateMetaControls: function() {
-        if (!this.model) return;
-        this.lookupReference('required1').setValue(this.model.getMeta('field1', 'required'));
-        this.lookupReference('required2').setValue(this.model.getMeta('field2', 'required'));
-        this.lookupReference('required3').setValue(this.model.getMeta('field3', 'required'));
-        this.lookupReference('readOnly1').setValue(this.model.getMeta('field1', 'readOnly'));
-        this.lookupReference('readOnly1').setValue(this.model.getMeta('field2', 'readOnly'));
-        this.lookupReference('readOnly1').setValue(this.model.getMeta('field3', 'readOnly'));
+        var model = this.getViewModel().get('curChild');
+        if (!model) {
+            return;
+        }
+        this.lookupReference('required1').setValue(model.getMetaValue('field1', 'required'));
+        this.lookupReference('required2').setValue(model.getMetaValue('field2', 'required'));
+        this.lookupReference('required3').setValue(model.getMetaValue('field3', 'required'));
+        this.lookupReference('readOnly1').setValue(model.getMetaValue('field1', 'readOnly'));
+        this.lookupReference('readOnly1').setValue(model.getMetaValue('field2', 'readOnly'));
+        this.lookupReference('readOnly1').setValue(model.getMetaValue('field3', 'readOnly'));
 
     }
 });
