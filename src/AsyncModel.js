@@ -881,6 +881,7 @@ Ext.define('Ext.ux.data.AsyncModel', {
     },
 
     getNumOfFields: function () {
+        var me = this;
         return me._fields.length;
     },
 
