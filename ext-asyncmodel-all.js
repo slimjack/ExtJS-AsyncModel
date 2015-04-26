@@ -922,7 +922,7 @@ Ext.define('Ext.ux.data.AsyncModel', {
         me.syncWithBusinessRules(function () {
             var resultErrorMessages = [];
             var resultInfoMessages = [];
-            var syncCounter = me.getNumOfFields() + me.getNumOfComplexFields();
+            var syncCounter = me.getNumOfFields();
             var fieldCallback = function (errorMessages, infoMessages) {
                 resultErrorMessages = resultErrorMessages.concat(errorMessages);
                 resultInfoMessages = resultInfoMessages.concat(infoMessages);
@@ -1541,17 +1541,6 @@ Ext.define('Ext.ux.data.AsyncModel', {
     getNumOfFields: function () {
         var me = this;
         return me._fields.length;
-    },
-
-    getNumOfComplexFields: function () {
-        var me = this;
-        var result = 0;
-        Ext.Array.forEach(me._fields, function (field) {
-            if (field.isModelField || field.isStoreField) {
-                result++;
-            }
-        });
-        return result;
     },
 
     fireChangeEvent: function (modifiedFieldNames) {
