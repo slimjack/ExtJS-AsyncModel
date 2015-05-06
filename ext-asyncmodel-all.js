@@ -632,7 +632,7 @@ Ext.define('Ext.ux.data.MetaModel', {
                 var fieldMetaModelName = record.fieldMetaModelName || 'Ext.ux.data.FieldMetaModel';
                 var fieldDefinitions = Ext.Array.map(record.getFieldsDescription(), function (fieldDescription) {
                     var defaultMetaValues = me.getMetaDefaults(fieldMetaModelName, fieldDescription);
-                    return { name: fieldDescription.name, reference: fieldMetaModelName, defaultValues: defaultMetaValues };
+                    return { name: fieldDescription.name, reference: { type: fieldMetaModelName, role: fieldDescription.name }, defaultValues: defaultMetaValues };
                 });
                 Ext.define(metaModelClassName, {
                     extend: 'Ext.ux.data.MetaModel',
@@ -1163,18 +1163,12 @@ Ext.define('Ext.ux.data.AsyncModel', {
         me.onModelChange(modifiedFieldNames);
     },
 
-    getRawData: function (options) {
+    getData: function (options) {
         var me = this;
-        options = options || {};
-        var result = me.getData();
-//        delete result[me.idProperty];
-        Ext.Array.forEach(me._fields, function (field) {
-            if (options.includeViewFields || !me.getMetaValue(field.name, 'viewField')) {
-                if ((field.isStoreField || field.isModelField) && field.instance()) {
-                    result[field.name] = field.instance().getRawData();
-                }
-            }
-        });
+        var result = me.callParent(arguments);
+        if (options && options.associated && !options.includeMeta) {
+            delete result.meta;
+        }
         return result;
     },
 
@@ -1738,15 +1732,6 @@ Ext.define('Ext.ux.data.AsyncStore', {
                         me._businessLogicSyncCallbacks.push(callback);
                     }
 
-                },
-
-                getRawData: function (options) {
-                    var me = this;
-                    var result = [];
-                    me.each(function (record) {
-                        result.push(record.getRawData(options));
-                    });
-                    return result;
                 },
 
                 clear: function () {

@@ -505,18 +505,12 @@ Ext.define('Ext.ux.data.AsyncModel', {
         me.onModelChange(modifiedFieldNames);
     },
 
-    getRawData: function (options) {
+    getData: function (options) {
         var me = this;
-        options = options || {};
-        var result = me.getData();
-//        delete result[me.idProperty];
-        Ext.Array.forEach(me._fields, function (field) {
-            if (options.includeViewFields || !me.getMetaValue(field.name, 'viewField')) {
-                if ((field.isStoreField || field.isModelField) && field.instance()) {
-                    result[field.name] = field.instance().getRawData();
-                }
-            }
-        });
+        var result = me.callParent(arguments);
+        if (options && options.associated && !options.includeMeta) {
+            delete result.meta;
+        }
         return result;
     },
 

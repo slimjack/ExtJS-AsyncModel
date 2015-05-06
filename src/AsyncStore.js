@@ -35,15 +35,6 @@ Ext.define('Ext.ux.data.AsyncStore', {
 
                 },
 
-                getRawData: function (options) {
-                    var me = this;
-                    var result = [];
-                    me.each(function (record) {
-                        result.push(record.getRawData(options));
-                    });
-                    return result;
-                },
-
                 clear: function () {
                     var me = this;
                     me.removeAll();

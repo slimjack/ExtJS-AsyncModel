@@ -68,7 +68,7 @@
                 var fieldMetaModelName = record.fieldMetaModelName || 'Ext.ux.data.FieldMetaModel';
                 var fieldDefinitions = Ext.Array.map(record.getFieldsDescription(), function (fieldDescription) {
                     var defaultMetaValues = me.getMetaDefaults(fieldMetaModelName, fieldDescription);
-                    return { name: fieldDescription.name, reference: fieldMetaModelName, defaultValues: defaultMetaValues };
+                    return { name: fieldDescription.name, reference: { type: fieldMetaModelName, role: fieldDescription.name }, defaultValues: defaultMetaValues };
                 });
                 Ext.define(metaModelClassName, {
                     extend: 'Ext.ux.data.MetaModel',
