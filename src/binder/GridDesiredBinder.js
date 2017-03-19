@@ -1,8 +1,8 @@
 ﻿//https://github.com/slimjack/ExtJs-AsyncModel
 
-Ext.define('Ext.ux.binder.GridRequiredBinder', {
+Ext.define('Ext.ux.binder.GridDesiredBinder', {
     implement: 'IGridMetaDataBinder',
-    requiredCellCls: 'requiredGridCell',
+    desiredCellCls: 'desiredGridCell',
 
     onInit: function (grid, plugin) { },
     onDestroy: function (grid, plugin) { },
@@ -10,8 +10,8 @@ Ext.define('Ext.ux.binder.GridRequiredBinder', {
     onRender: function (metadata, record, rowIndex, colIndex, store, view) {
         var dataIndex = metadata.column.dataIndex;
 
-        if (record.getMetaValue(dataIndex, 'required') && !record.getMetaValue(dataIndex, 'readOnly')) {
-            metadata.tdCls += ' ' + this.requiredCellCls;
+        if (record.getMetaValue(dataIndex, 'desired') && !record.getMetaValue(dataIndex, 'readOnly')) {
+            metadata.tdCls += ' ' + this.desiredCellCls;
         }
     }
 

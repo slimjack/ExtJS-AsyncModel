@@ -32,7 +32,6 @@ Ext.define('Ext.ux.data.AsyncStore', {
                     } else {
                         me._businessLogicSyncCallbacks.push(callback);
                     }
-
                 },
 
                 clear: function () {

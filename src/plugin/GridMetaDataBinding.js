@@ -19,7 +19,7 @@ Ext.define('Ext.ux.plugin.GridMetaDataBinding', {
         me.initBinders();
     },
 
-    initBinders: function() {
+    initBinders: function () {
         var me = this;
         if (!me._bindersInitialized) {
             me.overrideColumnRenderers();
@@ -30,14 +30,14 @@ Ext.define('Ext.ux.plugin.GridMetaDataBinding', {
                     scope: me
                 }
             });
-            Ext.Array.each(me.gridMetaDataBinders, function(binder) {
+            Ext.Array.each(me.gridMetaDataBinders, function (binder) {
                 binder.onInit(me._owner, me);
             });
             me._bindersInitialized = true;
         }
     },
 
-    destroy: function() {
+    destroy: function () {
         var me = this;
         if (me._bindersInitialized) {
             Ext.Array.each(me.gridMetaDataBinders, function (binder) {
@@ -74,7 +74,7 @@ Ext.define('Ext.ux.plugin.GridMetaDataBinding', {
         var gridView = grid.getView();
         var originalOnUpdate = gridView.onUpdate;
         if (metaDataMap) {
-            gridView.onUpdate = function(store, record, operation, changedFieldNames) {
+            gridView.onUpdate = function (store, record, operation, changedFieldNames) {
                 if (operation !== Ext.data.Model.VALIDCHANGE) {
                     if (operation === Ext.data.Model.METACHANGE) {
                         arguments[3] = me.updateChangedFieldNames(changedFieldNames, metaDataMap);
@@ -140,4 +140,3 @@ Ext.define('Ext.ux.plugin.GridMetaDataBinding', {
         return value;
     }
 });
-

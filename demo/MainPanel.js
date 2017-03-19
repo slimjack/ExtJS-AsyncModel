@@ -104,6 +104,40 @@
         },
         items: [{
             xtype: 'textfield',
+            name: 'field4',
+            bind: '{model.field4}',
+            fieldLabel: 'Field 4',
+            width: 300
+        }, {
+            xtype: 'label',
+            flex: 1,
+            text: 'email field'
+        }]
+    }, {
+        xtype: 'container',
+        layout: 'hbox',
+        defaults: {
+            margin: 5
+        },
+        items: [{
+            xtype: 'textfield',
+            name: 'field5',
+            bind: '{model.field5}',
+            fieldLabel: 'Field 5',
+            width: 300
+        }, {
+            xtype: 'label',
+            flex: 1,
+            text: 'email field'
+        }]
+    }, {
+        xtype: 'container',
+        layout: 'hbox',
+        defaults: {
+            margin: 5
+        },
+        items: [{
+            xtype: 'textfield',
             name: 'field1',
             bind: '{model.field1}',
             fieldLabel: 'One more field 1',

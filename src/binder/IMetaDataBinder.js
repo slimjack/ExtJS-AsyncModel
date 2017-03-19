@@ -3,10 +3,13 @@
 Ext.defineInterface('IMetaDataBinder', {
     inherit: 'ISingleton',
     methods: [
-        'getMetaDataName',
         'isApplicable',
         'onComponentBound',
         'onComponentUnbound',
         'applyMetaData'//(control, metaDataFieldName, metaValue, model, fieldName)
+    ],
+    properties: [
+        { name: 'listenedMetaDataNames', readOnly: true },
+        { name: 'metaDataName', readOnly: true }
     ]
 });

@@ -1,0 +1,75 @@
+[
+  {
+    "outputFileName": "ext-asyncmodel-all.js",
+    "inputFiles": [
+      "src/Texts.js",
+      "src/Overrides.js",
+
+      "src/validator/Context.js",
+      "src/validator/Registry.js",
+      "src/validator/AsyncValidator.js",
+      "src/validator/ParametrizedValidator.js",
+      "src/validator/DynamicLength.js",
+      "src/validator/Required.js",
+      "src/validator/Desired.js",
+      "src/validator/TextCase.js",
+      "src/validator/Email.js",
+      "src/validator/MaskRe.js",
+      "src/validator/RequireDigit.js",
+      "src/validator/RequireLetter.js",
+      "src/validator/StoreUnique.js",
+
+      "src/FieldMetaModel.js",
+      "src/MetaModel.js",
+      "src/StringFieldMetaModel.js",
+
+      "src/ArrayField.js",
+      "src/EmailField.js",
+      "src/AsyncModel.js",
+      "src/AsyncStore.js",
+
+      "src/plugin/GridMetaDataBinding.js",
+      "src/plugin/MetaDataBinding.js",
+
+      "src/binder/IMetaDataBinder.js",
+      "src/binder/AbstractFormFieldBinder.js",
+      "src/binder/FormFieldDisplayNameBinder.js",
+      "src/binder/FormFieldReadOnlyBinder.js",
+      "src/binder/FormFieldRequiredBinder.js",
+      "src/binder/FormFieldDesiredBinder.js",
+      "src/binder/FormFieldValidationBinder.js",
+      "src/binder/TextFieldCasingBinder.js",
+      "src/binder/TextFieldDisplaySecuredBinder.js",
+      "src/binder/TextFieldMaskReBinder.js",
+      "src/binder/TextFieldMaxLengthBinder.js",
+      "src/binder/IGridMetaDataBinder.js",
+      "src/binder/GridDesiredBinder.js",
+      "src/binder/GridReadOnlyBinder.js",
+      "src/binder/GridRequiredBinder.js",
+      "src/binder/GridValidationBinder.js"
+    ]
+  },
+  {
+    "outputFileName": "demo/demo-all.js",
+    "inputFiles": [
+      "demo/IBusinessService.js",
+      "demo/BusinessService.js",
+      "demo/IValidationService.js",
+      "demo/ValidationService.js",
+
+      "demo/StoreModel.js",
+      "demo/NestedModel.js",
+      "demo/MainModel.js",
+
+      "demo/DetailsController.js",
+      "demo/DetailsPanel.js",
+
+      "demo/Controller.js",
+      "demo/Grid.js",
+      "demo/MainPanel.js",
+      "demo/Viewport.js",
+
+      "demo/DemoApp.js"
+    ]
+  }
+]

@@ -1,525 +1,400 @@
-﻿///#source 1 1 /src/binder/IGridMetaDataBinder.js
-//https://github.com/slimjack/ExtJs-AsyncModel
+Ext.define('Ext.ux.AsyncModel.Texts', {
+    alternateClassName: 'AsyncModelTexts',
 
-Ext.defineInterface('IGridMetaDataBinder', {
-    inherit: 'ISingleton',
-    methods: [
-        'onInit',
-        'onDestroy',
-        'onRender'
-    ]
+    singleton: true,
+
+    //Messages
+    requiredFieldMessageTpl: '{fieldName} is a required field',
+    desiredFieldMessageTpl: '{fieldName} is a desired field',
+    invalidValue: 'Value is invalid',
+    minLengthViolatedTpl: "{fieldName} cannot be less than {minLength} characters",
+    maxLengthViolatedTpl: "{fieldName} cannot be more than {maxLength} characters",
+    minMaxLengthViolatedTpl: "{fieldName} must be minimum of {minLength} and maximum of {maxLength} characters",
+    onlyUpperCaseAllowed: "Only upper case is allowed",
+    onlyLowerCaseAllowed: "Only lower case is allowed",
+    forbiddenSymbols: "Value contains forbidden symbols",
+    onlyUpperCaseAllowedTpl: "Only upper case is allowed",
+    onlyLowerCaseAllowedTpl: "Only lower case is allowed",
+    onlyMixedCaseAllowedTpl: "{fieldName} must contain lowercase and uppercase letters",
+    requireLetterTpl: "{fieldName} must contain at least one letter",
+    requireDigitTpl: "{fieldName} must contain at least one digit",
+    storeUniqueTpl: "Record with same {fieldName} already added",
+    incorrectEmail: "Specified e-mail is incorrect"
 });
-///#source 1 1 /src/binder/IMetaDataBinder.js
-//https://github.com/slimjack/ExtJs-AsyncModel
-
-Ext.defineInterface('IMetaDataBinder', {
-    inherit: 'ISingleton',
-    methods: [
-        'getMetaDataName',
-        'isApplicable',
-        'onComponentBound',
-        'onComponentUnbound',
-        'applyMetaData'//(control, metaDataFieldName, metaValue, model, fieldName)
-    ]
-});
-///#source 1 1 /src/binder/AbstractFormFieldBinder.js
-//https://github.com/slimjack/ExtJs-AsyncModel
-
-Ext.define('Ext.ux.binder.AbstractFormFieldBinder', {
-    implement: 'IMetaDataBinder',
-    abstractClass: true,
-    
-    getMetaDataName: function () {
-        if (!this.metaDataName) {
-            Ext.Error.raise('metaDataName not defined');
-        }
-        return this.metaDataName;
-    },
-
-    onComponentBound: function (formField, model, modelFieldName) {},
-    
-    onComponentUnbound: function (formField) { },
-
-    isApplicable: function (control) {
-        return control.isFormField;
-    },
-
-    applyMetaData: function (control, metaValue, model, fieldName) { },
-
-    applyPlugin: function (formField, ptype) {
-        if (!formField.findPlugin(ptype)) {
-            formField.addPlugin(ptype);
-        }
-    }
-});
-///#source 1 1 /src/binder/FormFieldReadOnlyBinder.js
-//https://github.com/slimjack/ExtJs-AsyncModel
-
-Ext.define('Ext.ux.binder.FormFieldReadOnlyBinder', {
-    extend: 'Ext.ux.binder.AbstractFormFieldBinder',
-    metaDataName: 'readOnly',
-
-    onComponentBound: function (formField, model, modelFieldName) {
-        this.applyPlugin(formField, 'readonlylatching');
-    },
-    
-    applyMetaData: function (control, metaValue, model, fieldName) {
-        if (metaValue) {
-            control.latchReadOnly();
-        } else {
-            control.unlatchReadOnly();
-        }
-    }
-});
-///#source 1 1 /src/binder/FormFieldRequiredBinder.js
-//https://github.com/slimjack/ExtJs-AsyncModel
-
-Ext.define('Ext.ux.binder.FormFieldRequiredBinder', {
-    extend: 'Ext.ux.binder.AbstractFormFieldBinder',
-
-    requiredClassName: 'requiredField',
-    metaDataName: 'required',
-
-    applyMetaData: function (control, metaValue, model, fieldName) {
+Ext.override(Ext.form.TextField, {
+    afterRender: function () {
         var me = this;
-        var requiredClassName = (control.requiredClassName === undefined) ? me.requiredClassName : control.requiredClassName;
-        if (metaValue) {
-            control.addCls(requiredClassName);
-        } else {
-            control.removeCls(requiredClassName);
+        me.callParent(arguments);
+        if (me.subscribeFilterKeysAfterRender) {
+            me.mon(me.inputEl, 'keypress', me.filterKeys, me);
+            me.subscribeFilterKeysAfterRender = false;
         }
-    }
-});
-///#source 1 1 /src/binder/FormFieldValidationBinder.js
-//https://github.com/slimjack/ExtJs-AsyncModel
-
-Ext.define('Ext.ux.binder.FormFieldValidationBinder', {
-    extend: 'Ext.ux.binder.AbstractFormFieldBinder',
-    metaDataName: 'validationErrorMessages',
-
-    onComponentBound: function (formField, model, modelFieldName) {
-        this.applyPlugin(formField, 'externalvalidating');
     },
 
-    applyMetaData: function (control, metaValue, model, fieldName) {
-        control.setExternalErrors('modelValidation', metaValue);
-    }
-});
-///#source 1 1 /src/binder/GridReadOnlyBinder.js
-//https://github.com/slimjack/ExtJs-AsyncModel
-
-Ext.define('Ext.ux.binder.GridReadOnlyBinder', {
-    implement: 'IGridMetaDataBinder',
-
-    onInit: function(grid, plugin) {
+    setMaskRe: function (maskRe) {
         var me = this;
-        grid.on('beforeedit', me.onBeforeCellEdit);
-    },
-
-    onDestroy: function(grid, plugin) {
-        var me = this;
-        grid.un('beforeedit', me.onBeforeCellEdit);
-    },
-
-    onRender: function(metadata, record, rowIndex, colIndex, store, view) {},
-
-    onBeforeCellEdit: function (plugin, context) {
-        var isEditable = !context.record.getMetaValue(context.column.dataIndex, 'readOnly');
-        return isEditable;
-    }
-
-});
-///#source 1 1 /src/binder/GridRequiredBinder.js
-//https://github.com/slimjack/ExtJs-AsyncModel
-
-Ext.define('Ext.ux.binder.GridRequiredBinder', {
-    implement: 'IGridMetaDataBinder',
-    requiredCellCls: 'requiredGridCell',
-
-    onInit: function (grid, plugin) { },
-    onDestroy: function (grid, plugin) { },
-
-    onRender: function(metadata, record, rowIndex, colIndex, store, view) {
-        var dataIndex = metadata.column.dataIndex;
-
-        if (record.getMetaValue(dataIndex, 'required')) {
-            metadata.tdCls += ' ' + this.requiredCellCls;
-        }
-    }
-
-});
-///#source 1 1 /src/binder/GridValidationBinder.js
-//https://github.com/slimjack/ExtJs-AsyncModel
-
-Ext.define('Ext.ux.binder.GridValidationBinder', {
-    implement: 'IGridMetaDataBinder',
-    invalidCellCls: 'invalidGridCell',
-    
-    onInit: function (grid, plugin) { },
-    onDestroy: function (grid, plugin) { },
-
-    onRender: function(metadata, record, rowIndex, colIndex, store, view) {
-        var dataIndex = metadata.column.dataIndex;
-        var validationErrorMessages = record.getMetaValue(dataIndex, 'validationErrorMessages');
-        if (validationErrorMessages.length) {
-            metadata.tdCls += ' ' + this.invalidCellCls;
-            metadata.tdAttr = 'data-errorqtip="' + validationErrorMessages.join('</br>') + '"';
-        } else {
-            metadata.tdAttr = 'data-errorqtip=""';
-        }
-    }
-});
-///#source 1 1 /src/plugin/MetaDataBinding.js
-//https://github.com/slimjack/ExtJs-AsyncModel
-
-Ext.define('Ext.ux.plugin.MetaDataBinding', {
-    alias: 'plugin.metadatabinding',
-    extend: 'Ext.AbstractPlugin',
-    inject: {
-        metaDataBinders: 'IMetaDataBinder[]'
-    },
-
-    pathDelimiter: '.',
-
-    init: function (owner) {
-        var me = this;
-        me._formFields = new DynamicComponentQuery(owner, '[isFormField]:not([excludeForm])');
-        me._metaDataBinders = Ext.ux.util.Lookup.fromArray(me.metaDataBinders, function (binder) { return binder.getMetaDataName(); });
-        me._modelBindingCallbacks = new Ext.ux.util.Lookup();
-        me._modelBinds = {};
-        me._formFields.every(function (component) {
-            if (!component._metaBound) {
-                me.bindComponent(component);
-                component._metaBound = true;
-            }
-        });
-        me._formFields.everyRemoved(function (component) {
-            if (component._metaBound) {
-                me.unbindComponent(component);
-                delete component._metaBound;
-            }
-        });
-    },
-
-    bindComponent: function (component) {
-        var me = this;
-        var bind = component.getBind();
-        if (bind && bind.value) {
-            var fieldPath = bind.value.stub.path;
-            var fieldPathParts = fieldPath.split(me.pathDelimiter);
-            if (fieldPathParts.length < 2) {
-                //this is not a bind to model
-                return;
-            }
-            var fieldName = fieldPathParts[fieldPathParts.length - 1];
-            var modelPath = fieldPathParts.slice(0, -1).join(me.pathDelimiter);
-            var metaBasePathParts = Ext.Array.insert(fieldPathParts, fieldPathParts.length - 1, 'meta');
-            var metaBasePath = metaBasePathParts.join(me.pathDelimiter);
-
-            var viewModel = component.lookupViewModel();
-            var model = viewModel.get(modelPath);
-            if (!model) {
-                if (!me._modelBinds[modelPath]) {
-                    var modelBindDescriptor = '{' + modelPath + '}';
-                    me._modelBinds[modelPath] = viewModel.bind(modelBindDescriptor, function (modelInstance) {
-                        if (modelInstance) {
-                            me._modelBindingCallbacks.eachForKey(modelPath, function(callback) { callback(modelInstance); });
-                            me._modelBindingCallbacks.removeKey(modelPath);
-                            me._modelBinds[modelPath].destroy();
-                        }
-                    });
-                }
-                me._modelBindingCallbacks.add(modelPath, function (modelInstance) {
-                    me.bindComponentToModelField(component, modelInstance, fieldName, metaBasePath);
-                });
+        var prevMaskRe = me.maskRe;
+        me.maskRe = maskRe;
+        if (prevMaskRe && !me.maskRe) {
+            if (me.inputEl) {
+                me.mun(me.inputEl, 'keypress', me.filterKeys, me);
             } else {
-                me.bindComponentToModelField(component, model, fieldName, metaBasePath);
+                me.subscribeFilterKeysAfterRender = false;
+            }
+        } else if (!prevMaskRe && me.maskRe) {
+            if (me.inputEl) {
+                me.mon(me.inputEl, 'keypress', me.filterKeys, me);
+            } else {
+                me.subscribeFilterKeysAfterRender = true;
             }
         }
     },
 
-    unbindComponent: function (component) {
+    setMaxLength: function (maxLength) {
         var me = this;
-        if (component._metaBinds) {
-            Ext.Array.forEach(component._metaBinds, function(metaBind) {
-                metaBind.bind.destroy();
-                metaBind.binder.onComponentUnbound(component);
-            });
-        }
-    },
-
-    bindComponentToModelField: function (component, modelInstance, fieldName, metaBasePath) {
-        var me = this;
-        if (modelInstance instanceof Ext.ux.data.AsyncModel) {
-            var viewModel = component.lookupViewModel();
-            var metaNames = modelInstance.getMetaDataNames();
-            var metaVMBinds = [];
-            Ext.Array.forEach(metaNames, function (metaName) {
-                var metaPath = metaBasePath + me.pathDelimiter + metaName;
-                var metaBinder = me.getMetaDataBinder(component, metaName);
-                if (metaBinder) {
-                    var bindDescriptor = '{' + metaPath + '}';
-                    metaBinder.onComponentBound(component, modelInstance, fieldName);
-                    metaBinder.applyMetaData(component, modelInstance.getMetaValue(fieldName, metaName), modelInstance, fieldName);
-                    var metaVMBind = viewModel.bind(bindDescriptor, function (metaValue) {
-                        metaBinder.applyMetaData(component, metaValue, modelInstance, fieldName);
-                    });
-                    metaVMBinds.push({
-                        bind: metaVMBind,
-                        binder: metaBinder
-                    });
-                }
-            });
-            component._metaBinds = metaVMBinds;
-        }
-    },
-
-    getMetaDataBinder: function (control, metaDataFieldName) {
-        var me = this;
-        var result;
-        var maxSpecificity = 0;
-        me._metaDataBinders.eachForKey(metaDataFieldName, function (metaDataBinder) {
-            var currentSpecificity = metaDataBinder.isApplicable(control);
-            currentSpecificity = currentSpecificity === true ? 1 : (Ext.isNumber(currentSpecificity) ? currentSpecificity : 0);
-            if (currentSpecificity > maxSpecificity) {
-                result = metaDataBinder;
-                maxSpecificity = currentSpecificity;
+        var isMaxLengthDefined = maxLength !== null && maxLength !== undefined && maxLength >= 0;
+        if (isMaxLengthDefined) {
+            me.maxLength = maxLength;
+            me.enforceMaxLength = true;
+            if (me.inputEl && me.inputEl.dom) {
+                me.inputEl.dom.maxLength = maxLength !== Number.MAX_VALUE ? maxLength : undefined;
             }
-        });
-        return result;
+        } else if (me.maxLength && me.maxLength !== Number.MAX_VALUE) {
+            me.maxLength = Number.MAX_VALUE;
+            me.enforceMaxLength = false;
+            if (me.inputEl && me.inputEl.dom) {
+                me.inputEl.dom.maxLength = 524288;//default value
+            }
+        }
     }
 });
 
+Ext.override(Ext.data.validator.Format, {
+    validate: function (value) {
+        var me = this;
+        arguments[0] = value && me.validateTrimmed ? Ext.String.trim(value) : value;
+        if (!me.ignoreEmpty || !Ext.isEmpty(value)) {
+            return me.callParent(arguments);
+        } else {
+            return true;
+        }
+    }
+});
 
-///#source 1 1 /src/plugin/GridMetaDataBinding.js
+Ext.override(Ext.data.field.Field, {
+    isEqual: function (a, b) {
+        var me = this;
+        if (Ext.isArray(a) && Ext.isArray(b)) {
+            return Ext.Array.equals(a, b);
+        } else {
+            return me.callParent(arguments);
+        }
+    }
+});
+
 //https://github.com/slimjack/ExtJs-AsyncModel
 
-Ext.define('Ext.ux.plugin.GridMetaDataBinding', {
-    alias: 'plugin.gridmetadatabinding',
-    extend: 'Ext.AbstractPlugin',
-    inject: {
-        gridMetaDataBinders: 'IGridMetaDataBinder[]'
+Ext.define('Ext.ux.data.validator.Context', {
+    alternateClassName: 'ValidationContext',
+    statics: {
+        getFieldDisplayName: function (modelRecord, validatedFieldName) {
+            var me = this;
+            return modelRecord.getMetaValue(me.getFieldName(), 'displayName') || validatedFieldName;
+        },
+
+        create: function (modelRecord, validatedFieldName, additionalContext) {
+            var result = {
+                fieldName: this.getFieldDisplayName(record, validatedFieldName),
+            };
+            if (additionalContext) {
+                Ext.apply(result, additionalContext);
+            }
+            return result;
+
+        }
+    }
+});
+//https://github.com/slimjack/ExtJs-AsyncModel
+
+Ext.define('Ext.ux.data.validator.Registry', {
+    alternateClassName: 'ValidatorRegistry',
+    singleton: true,
+
+    constructor: function () {
+        this._data = {};
     },
 
+    register: function (fieldAttributeNames, validator, activator, aliases) {
+        var me = this;
+        if (Ext.isObject(fieldAttributeNames)) {
+            validator = fieldAttributeNames.validator;
+            activator = fieldAttributeNames.validator;
+            aliases = fieldAttributeNames.aliases;
+            fieldAttributeNames = fieldAttributeNames.fieldAttributeNames;
+        }
+        if (!fieldAttributeNames) {
+            Ext.Error.raise("'fieldAttributeNames' not specified");
+        }
+        fieldAttributeNames = Ext.Array.from(fieldAttributeNames);
+        var registryRecord = me.createRegistryRecord(validator, activator, fieldAttributeNames);
+        Ext.Array.each(fieldAttributeNames, function (fieldAttributeName) {
+            if (me._data[fieldAttributeName]) {
+                Ext.Error.raise("Validator for '" + fieldAttributeName + "' has been already registered");
+            }
+            me._data[fieldAttributeName] = registryRecord;
+        });
+    },
+
+    getData: function (additionalRegistrations) {
+        var me = this;
+        var result = {};
+        Ext.Object.each(me._data, function (fieldAttributeName, registryRecord) {
+            if (!result[fieldAttributeName]) {
+                var resultRecord = {
+                    validator: registryRecord.validator,
+                    activator: registryRecord.activator
+                };
+                Ext.Array.each(registryRecord.aliases, function (alias) {
+                    result[alias] = resultRecord;
+                });
+            }
+        });
+        if (additionalRegistrations) {
+            Ext.Object.each(additionalRegistrations, function (fieldAttributeName, data) {
+                var registryRecord = me.createRegistryRecord(data.validator, data.activator, [fieldAttributeName]);
+                result[fieldAttributeName] = {
+                    validator: registryRecord.validator,
+                    activator: registryRecord.activator
+                };
+            });
+        }
+        return result;
+    },
+
+    //region private methods
+    createRegistryRecord: function (validator, activator, fieldAttributeNames) {
+        var me = this;
+        if (!validator) {
+            Ext.Error.raise("'validator' not specified");
+        }
+        activator = activator || me.defaultActivationRule;
+        return {
+            aliases: fieldAttributeNames,
+            validator: validator,
+            activator: activator
+        };
+    },
+
+    defaultActivationRule: function (model, fieldName, fieldAttributeName) {
+        var fieldMetaDataNames = model.getMetaDataNames(fieldName);
+        if (Ext.Array.contains(fieldMetaDataNames, fieldAttributeName)) {
+            return !!model.getMetaValue(fieldName, fieldAttributeName);
+        } else {
+            var fieldDescriptor = model.getFieldDescriptor(fieldName);
+            return !!fieldDescriptor[fieldAttributeName];
+        }
+    }
+    //endregion
+
+});
+
+//https://github.com/slimjack/ExtJs-AsyncModel
+
+Ext.define('Ext.ux.data.validator.AsyncValidator', {
     mixins: [
-        'Ext.util.Observable'
+        'Ext.mixin.Factoryable'
     ],
 
-    init: function (grid) {
-        var me = this;
-        me._owner = grid;
-        me.mixins.observable.constructor.call(me);
-        me.callParent(arguments);
-        me.initBinders();
+    alias: 'data.async.validator.base', // also configures Factoryable
+
+    isAsyncValidator: true,
+    type: 'base',
+
+    config: {
+        fieldName: ''
     },
 
-    initBinders: function() {
-        var me = this;
-        if (!me._bindersInitialized) {
-            me.overrideColumnRenderers();
-            me.overrideGridViewOnUpdate(me._owner);
-            me.mon(me._owner, {
-                reconfigure: {
-                    fn: me.onReconfigure,
-                    scope: me
-                }
-            });
-            Ext.Array.each(me.gridMetaDataBinders, function(binder) {
-                binder.onInit(me._owner, me);
-            });
-            me._bindersInitialized = true;
+    statics: {
+        all: {},
+
+        register: function (name, cls) {
+            var all = this.all;
+            all[name.toUpperCase()] = all[name.toLowerCase()] = all[name] = cls.prototype;
         }
     },
 
-    destroy: function() {
-        var me = this;
-        if (me._bindersInitialized) {
-            Ext.Array.each(me.gridMetaDataBinders, function (binder) {
-                binder.onDestroy(me._owner, me);
-            });
+    onClassExtended: function (cls, data) {
+        if (data.type) {
+            Ext.data.validator.AsyncValidator.register(data.type, cls);
         }
     },
 
-    getMetaDataMap: function (grid) {
-        var columns = grid.columns;
-        var metaDataMap = null;
-        Ext.each(columns, function (column) {
-            if (column.metaDataIndex) {
-                metaDataMap = metaDataMap || {};
-                if (!metaDataMap[column.metaDataIndex]) {
-                    metaDataMap[column.metaDataIndex] = [];
-                }
-                metaDataMap[column.metaDataIndex].push(column.dataIndex);
-            }
-        });
-        return metaDataMap;
-    },
-
-    onReconfigure: function (grid, store, columns, oldStore, oldColumns, eOpts) {
-        var me = this;
-        if (columns) {
-            me.overrideColumnRenderers();
-        }
-    },
-
-    overrideGridViewOnUpdate: function (grid) {
-        var me = this;
-        var metaDataMap = me.getMetaDataMap(grid);
-        var gridView = grid.getView();
-        var originalOnUpdate = gridView.onUpdate;
-        if (metaDataMap) {
-            gridView.onUpdate = function(store, record, operation, changedFieldNames) {
-                if (operation !== Ext.data.Model.VALIDCHANGE) {
-                    if (operation === Ext.data.Model.METACHANGE) {
-                        arguments[3] = me.updateChangedFieldNames(changedFieldNames, metaDataMap);
-                    }
-                    originalOnUpdate.apply(gridView, arguments);
-                }
-            };
+    constructor: function (config) {
+        if (typeof config === 'function') {
+            this.fnOnly = true;
+            this.validate = config;
         } else {
-            gridView.onUpdate = function (store, record, operation) {
-                if (operation !== Ext.data.Model.VALIDCHANGE) {
-                    originalOnUpdate.apply(gridView, arguments);
-                }
-            };
+            this.initConfig(config);
         }
     },
 
-    updateChangedFieldNames: function (changedFieldNames, metaDataMap) {
-        var result = Ext.Array.clone(changedFieldNames);
-        Ext.each(changedFieldNames, function (fieldName) {
-            var mappedDataIndexes = metaDataMap[fieldName];
-            if (mappedDataIndexes) {
-                result = result.concat(mappedDataIndexes);
-            }
-        });
-        return result;
+    validate: function (fieldValue, model, options, callback) {
+        Ext.callback(callback, null, ['', '']);
     },
 
-    overrideColumnRenderers: function () {
+    getValidationContext: function (record) {
         var me = this;
-        var columns = me._owner.columns;
-        Ext.each(columns, function (column) {
-            var oldRenderer = column.renderer;
-            var colRenderer;
-            if (column.xtype === 'rownumberer') {
-                return;
-            }
-            if (oldRenderer) {
-                colRenderer = function (value, metadata, record, rowIndex, colIndex, store, view) {
-                    value = me.renderer(value, metadata, record, rowIndex, colIndex, store, view);
-                    value = oldRenderer.apply(this, [value, metadata, record, rowIndex, colIndex, store, view]);
-                    return value;
-                };
-            } else {
-                colRenderer = Ext.bind(me.renderer, me);
-            }
-
-            Ext.apply(column, {
-                renderer: colRenderer,
-                hasCustomRenderer: true
-            });
-        });
-    },
-
-    renderer: function (value, metadata, record, rowIndex, colIndex, store, view) {
-        var me = this;
-        var dataIndex = metadata.column.dataIndex;
-
-        if (dataIndex) {
-            Ext.Array.each(me.gridMetaDataBinders, function (binder) {
-                binder.onRender(metadata, record, rowIndex, colIndex, store, view);
-            });
-        }
-        return value;
+        return ValidationContext.create(modelRecord, me.getFieldName());
     }
-});
+},
+    function () {
+        this.register(this.prototype.type, this);
+    });
 
-
-///#source 1 1 /src/validator/BoundOverride.js
 //https://github.com/slimjack/ExtJs-AsyncModel
 
-Ext.override('Ext.data.validator.Bound', {
-    autoTrim: true,
-    getValue: function (fieldValue) {
-        var me = this;
-        if (fieldValue instanceof Ext.data.Store) {
-            return fieldValue.count();
-        }
-        var stringified = String(fieldValue);
-        if (me.autoTrim) {
-            stringified = Ext.String.trim(stringified);
-        }
-        return stringified.length;
+Ext.define('Ext.ux.data.validator.ParametrizedValidator', {
+    extend: 'Ext.data.validator.Validator',
+    alias: 'data.validator.baseparametrizedvalidator',
+    config: {
+        fieldName: '',
+        infoMessage: '',
+        errorMessageTpl: AsyncModelTexts.invalidValue,
     },
 
-    validateValue: function(value) {
+    applyInfoMessageTpl: function (template) {
+        return new Ext.XTemplate(template);
+    },
+
+    applyErrorMessageTpl: function (template) {
+        return new Ext.XTemplate(template);
+    },
+
+    //region public
+    validate: function (fieldValue, modelRecord) {
         var me = this;
-        if (value === undefined || value === null || !me.getValue(value)) {
-            return this.getEmptyMessage();
+        if (!me.isValid()) {
+            return Ext.String.format(me.getErrorMessageTpl(), me.getFieldDisplayName());
         }
         return true;
     },
 
-    validate: function (fieldValue) {
+    validateWithOptions: function (fieldValue, modelRecord, options) {
+        var me = this;
+        var validationResult = me.validate(fieldValue, modelRecord);
+        var errorMessage = '';
+        if (validationResult !== true) {
+            if (!Ext.isString(validationResult) || !validationResult) {
+                errorMessage = me.getErrorMessageTpl().apply(me.getValidationContext(modelRecord));
+            } else {
+                errorMessage = validationResult;
+            }
+        }
+
+        return {
+            errorMessage: errorMessage,
+            infoMessage: me.getInfoMessage()
+        };
+    },
+    //endregion
+
+    //region protected
+    isValid: function (fieldValue, modelRecord) {
+        return true;
+    },
+
+    getValidationContext: function (record) {
+        var me = this;
+        return ValidationContext.create(modelRecord, me.getFieldName());
+    },
+    //endregion
+
+    statics: {
+        decorateStandard: function (standardValidator) {
+            if (!standardValidator.validateWithOptions) {
+                standardValidator.validateWithOptions = this.validateWithOptions;
+            }
+        },
+
+        validateWithOptions: function (fieldValue, modelRecord, options) {
+            var me = this;
+            var validationResult = me.validate(fieldValue, modelRecord);
+            var errorMessage = '';
+            if (validationResult !== true) {
+                if (!Ext.isString(validationResult) || !validationResult) {
+                    errorMessage = me.defaultErrorMessage || AsyncModelTexts.invalidValue;
+                } else {
+                    errorMessage = validationResult;
+                }
+            }
+
+            return {
+                errorMessage: errorMessage,
+                infoMessage: ''
+            };
+        }
+
+    }
+});
+
+//https://github.com/slimjack/ExtJs-AsyncModel
+
+Ext.define('Ext.ux.data.validator.DynamicLength', {
+    extend: 'Ext.data.validator.Length',
+    alias: 'data.validator.dynamiclength',
+    type: 'dynamiclength',
+
+    config: {
+        trimStrings: true,
+        fieldName: '',
+        minOnlyMessageTpl: AsyncModelTexts.minLengthViolatedTpl,
+        maxOnlyMessageTpl: AsyncModelTexts.maxLengthViolatedTpl,
+        bothMessageTpl: AsyncModelTexts.minMaxLengthViolatedTpl
+    },
+
+    applyMinOnlyMessageTpl: function (template) {
+        return new Ext.XTemplate(template);
+    },
+
+    applyMaxOnlyMessageTpl: function (template) {
+        return new Ext.XTemplate(template);
+    },
+
+    applyBothMessageTpl: function (template) {
+        return new Ext.XTemplate(template);
+    },
+
+    validateValue: function (value) {
+        var me = this;
+        return true;
+    },
+
+    validate: function (fieldValue, record) {
         var me = this;
         if (fieldValue instanceof Ext.data.Model) {
             return true;
         }
+
+        fieldValue = me.prepareFieldValue(fieldValue);
+        if (me.ignoreEmpty && Ext.isEmpty(fieldValue)) {
+            return true;
+        }
+
+        arguments[0] = fieldValue;
+        me.updateConfiguration(record);
         return me.callParent(arguments);
-    }
-});
-///#source 1 1 /src/validator/MetaDataValidatorMapper.js
-//https://github.com/slimjack/ExtJs-AsyncModel
-
-Ext.define('Ext.ux.validator.MetaDataValidatorMapper', {
-    alternateClassName: 'MetaDataValidatorMapper',
-    singleton: true,
-
-    constructor: function() {
-        this.map = {};
     },
 
-    assosiate: function (metaDataName, validatorConfig, fieldConfigReplications) {
-        this.map[metaDataName] = {
-            config: validatorConfig,
-            fieldConfigReplications: fieldConfigReplications
-        };
-    },
-
-    getValidatorsMap: function () {
-        return this.map;
-    }
-
-});
-
-///#source 1 1 /src/validator/ParametrizedValidator.js
-//https://github.com/slimjack/ExtJs-AsyncModel
-
-Ext.define('Ext.data.validator.ParametrizedValidator', {
-    extend: 'Ext.data.validator.Validator',
-    alias: 'data.validator.baseparametrizedvalidator',
-
-    _infoMessage: '',
-
-    validateWithOptions: function (fieldValue, modelRecord, options) {
-        return this.validate(fieldValue, modelRecord);
-    },
-
-    getInfoMessage: function() {
-        return this._infoMessage;
-    }
-});
-///#source 1 1 /src/validator/Required.js
-//https://github.com/slimjack/ExtJs-AsyncModel
-
-Ext.define('Ext.data.validator.Required', {
-    extend: 'Ext.data.validator.ParametrizedValidator',
-    alias: 'data.validator.required',
-    type: 'required',
-    config: {
-        autoTrim: true,
-        requiredMessage: 'This is a required field'
+    prepareFieldValue: function (fieldValue) {
+        var me = this;
+        if (fieldValue instanceof Ext.data.Store) {
+            return fieldValue;
+        }
+        var stringified = String(fieldValue);
+        if (me.getTrimStrings()) {
+            stringified = Ext.String.trim(stringified);
+        }
+        return stringified;
     },
 
     getValue: function (fieldValue) {
@@ -527,19 +402,75 @@ Ext.define('Ext.data.validator.Required', {
         if (fieldValue instanceof Ext.data.Store) {
             return fieldValue.count();
         }
+        return fieldValue.length;
+    },
+
+    getValidationContext: function (record) {
+        var me = this;
+        var fieldName = me.getFieldName();
+        return ValidationContext.create(record, fieldName, {
+            minLength: record.getMetaValue(fieldName, 'minLength'),
+            maxLength: record.getMetaValue(fieldName, 'maxLength')
+        });
+    },
+
+    updateConfiguration: function (record) {
+        var me = this;
+        var context = me.getValidationContext(record);
+        me.setConfig({
+            minOnlyMessage: me.getMinOnlyMessageTpl().apply(context),
+            maxOnlyMessage: me.getMaxOnlyMessageTpl().apply(context),
+            bothMessage: me.getBothMessageTpl().apply(context),
+            min: context.minLength === null ? undefined : context.minLength,
+            max: context.maxLength === null ? undefined : context.maxLength
+        });
+    }
+});
+
+ValidatorRegistry.register(['minLength', 'maxLength'], function (fieldConfig) {
+    return {
+        type: 'dynamiclength',
+        minOnlyMessageTpl: fieldConfig.minLengthMessageTpl,
+        maxOnlyMessageTpl: fieldConfig.maxLengthMessageTpl,
+        bothMessageTpl: fieldConfig.minMaxLengthMessageTpl,
+        fieldName: fieldConfig.name,
+        trimStrings: fieldConfig.validateTrimmed,
+        ignoreEmpty: true
+    };
+});
+
+//https://github.com/slimjack/ExtJs-AsyncModel
+
+Ext.define('Ext.ux.data.validator.Required', {
+    extend: 'Ext.ux.data.validator.ParametrizedValidator',
+    alias: 'data.validator.required',
+    type: 'required',
+    config: {
+        trimStrings: true,
+        errorMessageTpl: AsyncModelTexts.requiredFieldMessageTpl
+    },
+
+    getValue: function (fieldValue) {
+        var me = this;
+        if (fieldValue instanceof Ext.data.Store) {
+            return fieldValue.count();
+        }
+        if (Ext.isArray(fieldValue)) {
+            return fieldValue.length;
+        }
         var stringified = String(fieldValue);
-        if (me.getAutoTrim()) {
+        if (me.getTrimStrings()) {
             stringified = Ext.String.trim(stringified);
         }
         return stringified.length;
     },
 
-    validate: function (fieldValue) {
+    isValid: function (fieldValue, modelRecord) {
         var me = this;
-        if (fieldValue === undefined || fieldValue === null || !me.getValue(fieldValue)) {
-            return me.getRequiredMessage();
-        }
-        return true;
+        var isValueEmpty = fieldValue === undefined
+            || fieldValue === null
+            || !me.getValue(fieldValue);
+        return !isValueEmpty;
     },
 
     validateWithOptions: function (fieldValue, modelRecord, options) {
@@ -547,21 +478,215 @@ Ext.define('Ext.data.validator.Required', {
         if (options.validatePresence) {
             return me.callParent(arguments);
         }
+        return {
+            errorMessage: '',
+            infoMessage: ''
+        };
+    }
+});
+//https://github.com/slimjack/ExtJs-AsyncModel
+
+Ext.define('Ext.ux.data.validator.Desired', {
+    extend: 'Ext.ux.data.validator.Required',
+    alias: 'data.validator.desired',
+    type: 'desired',
+    config: {
+        trimStrings: true,
+        errorMessage: AsyncModelTexts.desiredField
+    },
+
+    validate: function (fieldValue) {
+        var me = this;
+        var requiredValidatorResult = me.callParent(arguments);
+        if (Ext.isString(requiredValidatorResult)) {
+            me.setInfoMessage(requiredValidatorResult);
+        }
         return true;
     }
 });
-///#source 1 1 /src/FieldMetaModel.js
+//https://github.com/slimjack/ExtJs-AsyncModel
+
+ValidatorRegistry.register('textCase', function (fieldConfig) {
+    var fieldName = fieldConfig.name;
+    return new Ext.data.validator.Validator(function (value, record) {
+        if (Ext.isString(value) && fieldConfig.validateTrimmed) {
+            value = Ext.String.trim(value);
+        }
+
+        if (Ext.isEmpty(value)) {
+            return true;
+        }
+
+        var textCase = record.getMetaValue(fieldName, 'textCase');
+        var matcher;
+        var messageTpl;
+        switch (textCase) {
+            case TextCasings.upper:
+                matcher = /^[^a-z]*$/;
+                messageTpl = new Ext.XTemplate(AsyncModelTexts.onlyUpperCaseAllowedTpl);
+                break;
+            case TextCasings.lower:
+                matcher = /^[^A-Z]*$/;
+                messageTpl = new Ext.XTemplate(AsyncModelTexts.onlyLowerCaseAllowedTpl);
+                break;
+            case TextCasings.mixed:
+                matcher = /^(?=.*[a-z])(?=.*[A-Z]).+$/;
+                messageTpl = new Ext.XTemplate(AsyncModelTexts.onlyMixedCaseAllowedTpl);
+                break;
+            default: throw "Unsupported text case mode: " + fieldConfig.textCase;
+        }
+        if (!matcher.test(value)) {
+            return messageTpl.apply(ValidationContext.create(record, fieldName));
+        } else {
+            return true;
+        }
+    });
+});
+//https://github.com/slimjack/ExtJs-AsyncModel
+
+ValidatorRegistry.register(['isEmailField', 'email'], function (fieldConfig) {
+    return new Ext.data.validator.Format({
+        matcher: /^(")?(?:[^\."])(?:(?:[\.])?(?:[\w\-!#$%&'*+\/=?\^_`{|}~]))*\1@(\w[\-\w]*\.){1,5}([A-Za-z]){2,6}$/,
+        message: AsyncModelTexts.incorrectEmail,
+        ignoreEmpty: true,
+        validateTrimmed: fieldConfig.validateTrimmed
+    });
+});
+
+//https://github.com/slimjack/ExtJs-AsyncModel
+
+Ext.define('Ext.ux.data.validator.MaskRe', {
+    extend: 'Ext.ux.data.validator.ParametrizedValidator',
+    alias: 'data.validator.maskre',
+    type: 'maskre',
+    config: {
+        validateTrimmed: false,
+        ignoreEmpty: false,
+        errorMessageTpl: AsyncModelTexts.forbiddenSymbols
+    },
+
+    isValid: function (fieldValue, modelRecord) {
+        var me = this;
+        var maskRe = modelRecord.getMetaValue(me.getFieldName(), 'maskRe');
+        var isValid = true;
+        fieldValue = Ext.isString(fieldValue) && me.getValidateTrimmed() ? Ext.String.trim(fieldValue) : fieldValue;
+        if (Ext.isString(fieldValue)
+            && (!Ext.isEmpty(fieldValue) || !me.getIgnoreEmpty())
+            && maskRe) {
+            for (var i = 0; i < fieldValue.length; i++) {
+                if (!maskRe.test(fieldValue[i])) {
+                    isValid = false;
+                    break;
+                }
+            }
+        }
+        return isValid;
+    }
+});
+
+ValidatorRegistry.register('maskRe', function (fieldConfig) {
+    return new Ext.ux.data.validator.MaskRe({
+        errorMessageTpl: fieldConfig.maskReMesage,
+        fieldName: fieldConfig.name,
+        ignoreEmpty: true,
+        validateTrimmed: fieldConfig.validateTrimmed
+    });
+});
+
+//https://github.com/slimjack/ExtJs-AsyncModel
+
+ValidatorRegistry.register('requireDigit', function (fieldConfig) {
+    var messageTpl = new Ext.XTemplate(fieldConfig.requireDigitMessageTpl || AsyncModelTexts.requireDigitTpl);
+    var fieldName = fieldConfig.name;
+    return new Ext.data.validator.Validator(function (value, record) {
+        if (Ext.isString(value) && fieldConfig.validateTrimmed) {
+            value = Ext.String.trim(value);
+        }
+
+        if (Ext.isEmpty(value)) {
+            return true;
+        }
+
+        if (!/\d/.test(value)) {
+            return messageTpl.apply(ValidationContext.create(record, fieldName));
+        } else {
+            return true;
+        }
+    });
+});
+
+//https://github.com/slimjack/ExtJs-AsyncModel
+
+ValidatorRegistry.register('requireLetter', function (fieldConfig) {
+    var messageTpl = new Ext.XTemplate(fieldConfig.requireLetterMessageTpl || AsyncModelTexts.requireLetterTpl);
+    var fieldName = fieldConfig.name;
+    return new Ext.data.validator.Validator(function (value, record) {
+        if (Ext.isString(value) && fieldConfig.validateTrimmed) {
+            value = Ext.String.trim(value);
+        }
+
+        if (Ext.isEmpty(value)) {
+            return true;
+        }
+
+        if (!/\D/.test(value)) {
+            return messageTpl.apply(ValidationContext.create(record, fieldName));
+        } else {
+            return true;
+        }
+    });
+});
+
+//https://github.com/slimjack/ExtJs-AsyncModel
+
+ValidatorRegistry.register({
+    fieldAttributeNames: 'storeUnique',
+
+    validator: function (fieldConfig) {
+        var messageTpl = new Ext.XTemplate(fieldConfig.storeUniqueMessageTpl || AsyncModelTexts.storeUniqueTpl);
+        var fieldName = fieldConfig.name;
+        return new Ext.data.validator.Validator(function (value, record) {
+            if (Ext.isString(value) && fieldConfig.validateTrimmed) {
+                value = Ext.String.trim(value);
+            }
+
+            if (Ext.isEmpty(value) || !record.store) {
+                return true;
+            }
+
+            var duplicateIndex = record.store.findBy(function (r) {
+                var anotherValue = r.get(fieldName);
+                if (Ext.isString(anotherValue) && fieldConfig.validateTrimmed) {
+                    anotherValue = Ext.String.trim(anotherValue);
+                }
+                return r !== record && anotherValue === value;
+            });
+
+            if (duplicateIndex !== -1) {
+                return messageTpl.apply(ValidationContext.create(record, fieldName));
+            } else {
+                return true;
+            }
+        });
+    }
+});
+
+//https://github.com/slimjack/ExtJs-AsyncModel
+
 Ext.define('Ext.ux.data.FieldMetaModel', {
     extend: 'Ext.data.Model',
     fields: [
+        { name: 'storeUnique', type: 'bool', defaultValue: false },
         { name: 'readOnly', type: 'bool', defaultValue: false },
+        { name: 'displayName', type: 'string', defaultValue: '' },
         { name: 'required', type: 'bool', defaultValue: false },
+        { name: 'desired', type: 'bool', defaultValue: false },
         { name: 'validationErrorMessages', type: 'auto', defaultValue: [] },
         { name: 'validationInfoMessages', type: 'auto', defaultValue: [] }
     ]
 });
+//https://github.com/slimjack/ExtJs-AsyncModel
 
-///#source 1 1 /src/MetaModel.js
 Ext.define('Ext.ux.data.MetaModel', {
     extend: 'Ext.data.Model',
     idProperty: '__fakeId__',
@@ -580,7 +705,7 @@ Ext.define('Ext.ux.data.MetaModel', {
                 return;
             }
             var setterName = 'set' + Ext.String.capitalize(field.name);
-            var fieldMetaRecord = Ext.create(me.fieldMetaModelName);
+            var fieldMetaRecord = Ext.create(field.metaModelName);
             fieldMetaRecord.fieldName = field.name;
             me[setterName].call(me, fieldMetaRecord);
             fieldMetaRecord.join(receiver);
@@ -608,9 +733,18 @@ Ext.define('Ext.ux.data.MetaModel', {
         });
     },
 
-    getMetaDataNames: function () {
+    getMetaDataNames: function (fieldName) {
         var me = this;
-        var metaFields = Ext.ClassManager.get(me.fieldMetaModelName).fields;
+        if (!fieldName) {
+            Ext.Error.raise(me.$className + '.getMetaDataNames: "fieldName" parameter is not specified');
+        }
+        var metaModelField = Ext.Array.findBy(me.fields, function (field) {
+            return field.name === fieldName;
+        });
+        if (!metaModelField) {
+            Ext.Error.raise(me.$className + '.getMetaDataNames: Field "' + fieldName + '" not found');
+        }
+        var metaFields = Ext.ClassManager.get(metaModelField.metaModelName).fields;
         var result = [];
         Ext.Array.each(metaFields, function (metaField) {
             if (!metaField.identifier) {
@@ -622,21 +756,27 @@ Ext.define('Ext.ux.data.MetaModel', {
     },
 
     statics: {
+        globalFieldMetaModelMap: {},
+
         createMetaModel: function (record) {
             var me = this;
             if (!(record instanceof Ext.ux.data.AsyncModel)) {
-                throw 'Ext.ux.data.MetaModel can be applied only to Ext.ux.data.AsyncModel';
+                Ext.Error.raise('Ext.ux.data.MetaModel can be applied to Ext.ux.data.AsyncModel only');
             }
             var metaModelClassName = Ext.getClassName(record) + '__Meta__';
             if (!Ext.ClassManager.isCreated(metaModelClassName)) {
-                var fieldMetaModelName = record.fieldMetaModelName || 'Ext.ux.data.FieldMetaModel';
-                var fieldDefinitions = Ext.Array.map(record.getFieldsDescription(), function (fieldDescription) {
+                var fieldDefinitions = Ext.Array.map(record.getFieldsDescriptors(), function (fieldDescription) {
+                    var fieldMetaModelName = me.getFieldMetaModelName(record, fieldDescription);
                     var defaultMetaValues = me.getMetaDefaults(fieldMetaModelName, fieldDescription);
-                    return { name: fieldDescription.name, reference: { type: fieldMetaModelName, role: fieldDescription.name }, defaultValues: defaultMetaValues };
+                    return {
+                        name: fieldDescription.name,
+                        reference: { type: fieldMetaModelName, role: fieldDescription.name },
+                        defaultValues: defaultMetaValues,
+                        metaModelName: fieldMetaModelName
+                    };
                 });
                 Ext.define(metaModelClassName, {
                     extend: 'Ext.ux.data.MetaModel',
-                    fieldMetaModelName: fieldMetaModelName,
                     fields: fieldDefinitions
                 });
             }
@@ -647,15 +787,77 @@ Ext.define('Ext.ux.data.MetaModel', {
             var metaFields = Ext.ClassManager.get(fieldMetaModelName).fields;
             var result = {};
             Ext.Array.forEach(metaFields, function (metaField) {
-                if (metaField.name !== 'validationErrorMessages' && metaField.name !== 'validationInfoMessages') {
-                    result[metaField.name] = fieldDescription[metaField.name] || metaField.defaultValue || null;
-                }
+                result[metaField.name] = fieldDescription[metaField.name] || metaField.defaultValue || null;
             });
             return result;
+        },
+
+        getFieldMetaModelName: function (record, fieldDescription) {
+            var me = this;
+            var result = fieldDescription.metaModelName;
+            if (!result && record.fieldMetaModelMap && fieldDescription.type) {
+                result = record.fieldMetaModelMap[fieldDescription.type];
+            }
+
+            if (!result && fieldDescription.type) {
+                result = me.globalFieldMetaModelMap[fieldDescription.type];
+            }
+
+            if (!result) {
+                result = record.fieldMetaModelName || 'Ext.ux.data.FieldMetaModel';
+            }
+            return result;
+        },
+
+        assignDefaultFieldMetaModel: function (fieldMetaModelName, fieldType) {
+            var me = this;
+            me.globalFieldMetaModelMap[fieldType] = fieldMetaModelName;
         }
     }
 });
-///#source 1 1 /src/AsyncModel.js
+
+//https://github.com/slimjack/ExtJs-AsyncModel
+
+Ext.define('Ext.ux.data.StringFieldMetaModel', {
+    extend: 'Ext.ux.data.FieldMetaModel',
+    fields: [
+        { name: 'requireLetter', type: 'bool', defaultValue: false },
+        { name: 'requireDigit', type: 'bool', defaultValue: false },
+        { name: 'textCase', type: 'string', defaultValue: null },
+        { name: 'maskRe', type: 'auto', defaultValue: null },
+        { name: 'maxLength', type: 'integer', allowNull: true, defaultValue: null },
+        { name: 'minLength', type: 'integer', allowNull: true, defaultValue: null },
+        { name: 'displaySecured', type: 'bool', defaultValue: false }
+    ]
+});
+Ext.ux.data.MetaModel.assignDefaultFieldMetaModel('Ext.ux.data.StringFieldMetaModel', 'string');
+
+//https://github.com/slimjack/ExtJs-AsyncModel
+
+Ext.define('Ext.ux.data.field.Array', {
+    extend: 'Ext.data.field.Field',
+    alias: 'data.field.array',
+    isArrayField: true,
+    compare: function (a, b) {
+        var aLength = a.length;
+        var bLength = b.length;
+        return aLength == bLength ? 0 : aLength < bLength ? -1 : 1;
+    },
+
+    isEqual: function (a, b) {
+        return Ext.Array.equals(a, b);
+    }
+});
+
+//https://github.com/slimjack/ExtJs-AsyncModel
+
+Ext.define('Ext.ux.data.field.Email', {
+    extend: 'Ext.data.field.String',
+    alias: 'data.field.email',
+    isEmailField: true
+});
+Ext.ux.data.MetaModel.assignDefaultFieldMetaModel('Ext.ux.data.StringFieldMetaModel', 'email');
+
 //https://github.com/slimjack/ExtJs-AsyncModel
 
 Ext.define('Ext.ux.data.AsyncModel', {
@@ -678,15 +880,8 @@ Ext.define('Ext.ux.data.AsyncModel', {
     _errorMessage: '',
     _infoMessage: '',
 
-    _defaultMetaDataValidatorsMap: {
-        required: {
-            config: 'required',
-            fieldConfigReplications: ['requiredMessage']
-        }
-    },
-
     fields: [
-        { name: 'meta', reference: 'Ext.ux.data.MetaModel' }
+        { name: 'meta', persist: false, reference: 'Ext.ux.data.MetaModel' }
     ],
 
     //region Initialization
@@ -696,20 +891,35 @@ Ext.define('Ext.ux.data.AsyncModel', {
         me.mixins.observable.constructor.call(me);
         me.validationRules = me.validationRules || {};
         me.businessRules = me.businessRules || {};
-
+        //TODO CHECK
+        options = options || {};
+        options.eagerNetsedInstantiation = true;
+        me._defaultValidatorRegistry = {
+            required: {
+                validator: function (fieldDescriptor) {
+                    return {
+                        type: 'required',
+                        errorMessageTpl: fieldDescriptor.requiredMessage,
+                        fieldName: fieldDescriptor.name,
+                        trimStrings: fieldDescriptor.validateTrimmed
+                    }
+                }
+            },
+            desired: {
+                validator: function (fieldDescriptor) {
+                    return {
+                        type: 'desired',
+                        errorMessageTpl: fieldDescriptor.desiredMessage,
+                        fieldName: fieldDescriptor.name,
+                        trimStrings: fieldDescriptor.validateTrimmed
+                    }
+                }
+            }
+        };
         me._ignoredFieldNames = [];
         me._modifiedNestedFieldNames = [];
         me._validationCallbacks = [];
         me._businessLogicSyncCallbacks = [];
-        var originalIsEqual = me.isEqual;
-        me.isEqual = function (a, b) {
-            var me = this;
-            if (Ext.isArray(a) && Ext.isArray(b)) {
-                return Ext.Array.equals(a, b);
-            } else {
-                return originalIsEqual.apply(me, arguments);
-            }
-        };
 
         me._suppressValidityReset++;
         me.callParent(arguments);
@@ -718,7 +928,21 @@ Ext.define('Ext.ux.data.AsyncModel', {
         me.initBusinessRules();
         me.initValidationModel();
         me._suppressValidityReset--;
-
+        //isEqual is private. Therefore, we need to override in unusual way
+        var originalIsEqual = me.isEqual;
+        me.isEqual = function (a, b, field) {
+            var me = this;
+            var fieldDescriptor = null;
+            if (field) {
+                var fieldName = field.isField ? field.name : field;
+                fieldDescriptor = me.getFieldDescriptor(fieldName);
+            }
+            if (fieldDescriptor && (fieldDescriptor.isModelField || fieldDescriptor.isStoreField)) {
+                return a === b;
+            } else {
+                return originalIsEqual.apply(me, arguments);
+            }
+        };
         me.join({
             afterEdit: function () {
                 var args = Array.prototype.slice.call(arguments, 0);
@@ -726,27 +950,40 @@ Ext.define('Ext.ux.data.AsyncModel', {
                 me.afterEdit.apply(me, args);
             }
         });
+        if (data) {
+            me.initData();
+        }
         if (options && options.applyNested) {
             me.loadData(initialData);
         }
     },
 
-    getFieldsDescription: function () {
+    getFieldsDescriptors: function () {
         var me = this;
-        return me._fields;
+        return me._fieldsDescriptors;
     },
 
-    getMetaDataNames: function () {
+    getMetaDataNames: function (fieldName) {
         var me = this;
-        return me._metaModel.getMetaDataNames();
+        return me._metaModel.getMetaDataNames(fieldName);
+    },
+
+    initData: function () {
+        var me = this;
+        var fieldNames = Ext.Array.map(me._fieldsDescriptors, function (fieldDescriptor) { return fieldDescriptor.name; });
+        Ext.Object.each(me.data, function (dataFieldName) {
+            if (!Ext.Array.contains(fieldNames, dataFieldName)) {
+                delete me.data[dataFieldName];
+            }
+        });
     },
 
     initFields: function (eagerNetsedInstantiation) {
         var me = this;
-        me._fields = [];
+        me._fieldsDescriptors = [];
         Ext.Array.forEach(me.fields, function (field) {
             if (field.name !== 'meta' && !field.reference) {
-                me._fields.push(field);
+                me._fieldsDescriptors.push(field);
             }
         });
         Ext.Object.eachValue(me.associations, function (schemaRole) {
@@ -762,7 +999,7 @@ Ext.define('Ext.ux.data.AsyncModel', {
             field.instance = Ext.bind(me[schemaRole.getterName], me);
             if (schemaRole.association.isOneToOne) {
                 if (eagerNetsedInstantiation) {
-                    me[schemaRole.setterName].call(me, new schemaRole.cls());
+                    me[schemaRole.setterName].call(me, new schemaRole.cls(null, null, { eagerNetsedInstantiation: eagerNetsedInstantiation }));
                     me.subscribeNestedModel(field.instance(), field.name);
                 }
                 field.isModelField = true;
@@ -776,7 +1013,7 @@ Ext.define('Ext.ux.data.AsyncModel', {
                     validateOnMetaDataChange: me.validateOnMetaDataChange
                 });
             }
-            me._fields.push(field);
+            me._fieldsDescriptors.push(field);
         });
     },
 
@@ -795,43 +1032,44 @@ Ext.define('Ext.ux.data.AsyncModel', {
 
     initValidationModel: function () {
         var me = this;
-        me._metaDataValidatorsMap = Ext.apply({}, MetaDataValidatorMapper.getValidatorsMap(), me.metaDataValidatorsMap);
-        me._metaDataValidatorsMap = Ext.applyIf(me._metaDataValidatorsMap, me._defaultMetaDataValidatorsMap);
-        Ext.Object.each(me._metaDataValidatorsMap, function (metaDataName, mapRecord) {
-            mapRecord.activationRule = mapRecord.activationRule || function (model, fieldName) {
-                return !!model.getMetaValue(fieldName, metaDataName);
-            };
-        });
+        var modelValidatorRegistry = Ext.apply(me._defaultValidatorRegistry, me.validatorRegistry);
+        me._validatorRegistry = ValidatorRegistry.getData(modelValidatorRegistry);
         var emptyOptions = JSON.stringify({});
         me._validationModel = {};
         me._validationRules = {};
-        Ext.Array.forEach(me._fields, function (field) {
+        Ext.Array.forEach(me._fieldsDescriptors, function (field) {
             me._validationModel[field.name] = {
-                isValidated: true,
-                isValidating: false,
-                lastValidatingOptions: emptyOptions,
-                fieldState: 0,
-                callbacks: [],
-                lastValidValue: null
+                callbacks: []
             };
-            me._validationRules[field.name] = me.createValidationRule(field.name);
+            me.initFieldValidationRules(field.name);
         });
+        me.resetValidation();
+    },
+
+    initFieldValidationRules: function (fieldName) {
+        var me = this;
+        var rules = me.createFieldAutomaticValidationRules(fieldName);
+        var ruleDefinitions = Ext.Array.from(me.validationRules[fieldName]);
+        Ext.Array.each(ruleDefinitions, function (ruleDefinition) {
+            rules.push(me.createValidationRule(ruleDefinition, fieldName));
+        });
+        me._validationRules[fieldName] = rules;
     },
 
     initBusinessRules: function () {
         var me = this;
         me._businessRuleCompletedCallback = Ext.bind(me.onBusinessRuleCompleted, me);
         me._businessRules = {};
-        Ext.Array.forEach(me._fields, function (field) {
+        Ext.Array.forEach(me._fieldsDescriptors, function (field) {
             var changeRuleName = field.name + 'Change';
             var changeRule = me.businessRules[changeRuleName];
             if (changeRule) {
-                me._businessRules[changeRuleName] = me.createAsyncRule(changeRule, field.name, me.defaultBusinessService);
+                me._businessRules[changeRuleName] = me.createAsyncRule(field.name, changeRule, me.defaultBusinessService);
             }
             var validChangeRuleName = field.name + 'ValidChange';
             var validChangeRule = me.businessRules[validChangeRuleName];
             if (validChangeRule) {
-                me._businessRules[validChangeRuleName] = me.createAsyncRule(validChangeRule, field.name, me.defaultBusinessService);
+                me._businessRules[validChangeRuleName] = me.createAsyncRule(field.name, validChangeRule, me.defaultBusinessService);
             }
         });
     },
@@ -840,8 +1078,8 @@ Ext.define('Ext.ux.data.AsyncModel', {
     //region Public methods
     syncWithBusinessRules: function (callback) {
         var me = this;
-        me._businessRulesSyncCounter += me._fields.length;
-        Ext.Array.forEach(me._fields, function (field) {
+        me._businessRulesSyncCounter += me._fieldsDescriptors.length;
+        Ext.Array.forEach(me._fieldsDescriptors, function (field) {
             if ((field.isStoreField || field.isModelField) && field.instance()) {
                 field.instance().syncWithBusinessRules(me._businessRuleCompletedCallback);
             } else {
@@ -858,39 +1096,53 @@ Ext.define('Ext.ux.data.AsyncModel', {
     loadData: function (data) {
         var me = this;
         me.syncWithBusinessRules(function () {
-            me.resetValidation();
             me._suppressValidityReset++;
             me._suppressBusinessLogic++;
             me.resetMetaData();
-            me.clearAllFields();
+            if (data[me.idProperty] === undefined) {
+                me.clearAllFields([me.idProperty]);
+            } else {
+                me.clearAllFields();
+            }
             me.beginEdit();
-            Ext.Array.forEach(me._fields, function (field) {
-                if (field.isStoreField || field.isModelField) {
+            Ext.Array.forEach(me._fieldsDescriptors, function (field) {
+                if (field.isStoreField) {
+                    var instance = field.instance();
+                    if (data[field.name] && instance) {
+                        var records = [];
+                        for (var i = 0; i < data[field.name].length; i++) {
+                            var record = instance.createModel({});
+                            record.loadData(data[field.name][i]);
+                            records.push(record);
+                        }
+                        instance.loadData(records);
+                    }
+                } else if (field.isModelField) {
                     if (data[field.name] && field.instance()) {
                         field.instance().loadData(data[field.name]);
                     }
-                } else {
+                } else if (data[field.name] !== undefined) {
                     me.set(field.name, data[field.name]);
                 }
             });
             me.endEdit();
             me.commit(true);
+            me.onLoading();
             me._suppressBusinessLogic--;
             me._suppressValidityReset--;
+            me.resetValidation();
             me.onLoad();
         });
     },
 
-    runBusinessLogic: function (businessFn, syncWithBusinessRules) {
+    runBusinessLogic: function (businessFn, scope, syncWithBusinessRules) {
         var me = this;
         if (syncWithBusinessRules) {
             me.syncWithBusinessRules(function () {
-                me._businessRulesSyncCounter++;
-                businessFn(me._businessRuleCompletedCallback);
+                me.callBusinessRuleFn(businessFn, scope);
             });
         } else {
-            me._businessRulesSyncCounter++;
-            businessFn(me._businessRuleCompletedCallback);
+            me.callBusinessRuleFn(businessFn, scope);
         }
     },
 
@@ -898,14 +1150,15 @@ Ext.define('Ext.ux.data.AsyncModel', {
         var me = this;
 
         me.syncWithBusinessRules(function () {
-            me.resetValidation();
             me.resetMetaData();
             me._suppressValidityReset++;
             me._suppressBusinessLogic++;
             me.clearAllFields(excludedFields);
-            me.onClear();
+            me.onClearing();
             me._suppressBusinessLogic--;
             me._suppressValidityReset--;
+            me.resetValidation();
+            me.onClear();
         });
     },
 
@@ -922,7 +1175,7 @@ Ext.define('Ext.ux.data.AsyncModel', {
         me.syncWithBusinessRules(function () {
             var resultErrorMessages = [];
             var resultInfoMessages = [];
-            var syncCounter = me.getNumOfFields();
+            var syncCounter = me.getNumOfFields() + me.getNumOfComplexFields();
             var fieldCallback = function (errorMessages, infoMessages) {
                 resultErrorMessages = resultErrorMessages.concat(errorMessages);
                 resultInfoMessages = resultInfoMessages.concat(infoMessages);
@@ -944,7 +1197,7 @@ Ext.define('Ext.ux.data.AsyncModel', {
                     fieldCallback([errorMessage], [infoMessage]);
                 });
             }
-            Ext.Array.forEach(me._fields, function (field) {
+            Ext.Array.forEach(me._fieldsDescriptors, function (field) {
                 me.validateField(field.name, options, fieldCallback);
                 if ((field.isStoreField || field.isModelField) && field.instance()) {
                     field.instance().validate(options, fieldCallback);
@@ -963,7 +1216,7 @@ Ext.define('Ext.ux.data.AsyncModel', {
         var me = this;
         me._errorMessage = '';
         me._infoMessage = '';
-        Ext.Array.forEach(me._fields, function (field) {
+        Ext.Array.forEach(me._fieldsDescriptors, function (field) {
             me.resetFieldValidation(field.name);
             if ((field.isStoreField || field.isModelField) && field.instance()) {
                 field.instance().resetValidation();
@@ -978,7 +1231,7 @@ Ext.define('Ext.ux.data.AsyncModel', {
             return false;
         }
         var isValidated = true;
-        Ext.Array.each(me._fields, function (field) {
+        Ext.Array.each(me._fieldsDescriptors, function (field) {
             var fieldValidationModel = me._validationModel[field.name];
             isValidated = fieldValidationModel.isValidated;
             if (isValidated && ((field.isStoreField || field.isModelField) && field.instance())) {
@@ -995,7 +1248,7 @@ Ext.define('Ext.ux.data.AsyncModel', {
         var me = this;
         var isValid = !me._errorMessage;
         if (isValid) {
-            Ext.Array.each(me._fields, function (field) {
+            Ext.Array.each(me._fieldsDescriptors, function (field) {
                 isValid = !me.getMetaValue(field.name, 'validationErrorMessages').length;
                 if (isValid && ((field.isStoreField || field.isModelField) && field.instance())) {
                     isValid = field.instance().isValid();
@@ -1016,6 +1269,13 @@ Ext.define('Ext.ux.data.AsyncModel', {
         me.setMetaInternal(fieldName, metaDataFieldName, value);
     },
 
+    setAllFieldsMeta: function (metaDataFieldName, value) {
+        var me = this;
+        Ext.Array.forEach(me._fieldsDescriptors, function (field) {
+            me.setMetaValue(field.name, metaDataFieldName, value);
+        });
+    },
+
     getMetaValue: function (fieldName, metaDataFieldName) {
         var me = this;
         return me._metaModel.getMeta(fieldName, metaDataFieldName);
@@ -1029,7 +1289,7 @@ Ext.define('Ext.ux.data.AsyncModel', {
     getFieldValidationInfo: function (fieldName) {
         var me = this;
         if (fieldName !== me.idProperty) {
-            var field = me.getField(fieldName);
+            var field = me.getFieldDescriptor(fieldName);
             var fieldValidationModel = me._validationModel[fieldName];
             return {
                 isValidated: fieldValidationModel.isValidated,
@@ -1066,8 +1326,6 @@ Ext.define('Ext.ux.data.AsyncModel', {
     onFieldValidated: function (fieldName) {
         var me = this;
         var fieldValidationModel = me._validationModel[fieldName];
-        fieldValidationModel.isValidating = false;
-        fieldValidationModel.isValidated = true;
         me.executeFieldValidationCallbacks(fieldName);
         var errorMessages = me.getMetaValue(fieldName, 'validationErrorMessages');
         var infoMessages = me.getMetaValue(fieldName, 'validationInfoMessages');
@@ -1075,7 +1333,7 @@ Ext.define('Ext.ux.data.AsyncModel', {
         me.afterValidated([fieldName]);
         if (!errorMessages.length
             && !me._suppressValidChangeEvent
-            && !me.isEqual(fieldValidationModel.lastValidValue, me.get(fieldName))) {
+            && !me.isEqual(fieldValidationModel.lastValidValue, me.get(fieldName), fieldName)) {
             fieldValidationModel.lastValidValue = me.get(fieldName);
             me.onValidChange(fieldName);
         }
@@ -1090,12 +1348,19 @@ Ext.define('Ext.ux.data.AsyncModel', {
         me.afterValidChange([fieldName]);
     },
 
+    onLoading: Ext.emptyFn,
+
+    onClearing: Ext.emptyFn,
+
     onLoad: Ext.emptyFn,
 
     onClear: Ext.emptyFn,
 
     onModelChange: function (modifiedFieldNames) {
         var me = this;
+        if (modifiedFieldNames) {
+            modifiedFieldNames = modifiedFieldNames.filter(function (fieldName) { return fieldName !== 'meta' });
+        }
         Ext.each(modifiedFieldNames, function (fieldName) {
             if (!me._suppressBusinessLogic) {
                 me.runBusinessRule(fieldName, 'Change');
@@ -1165,8 +1430,9 @@ Ext.define('Ext.ux.data.AsyncModel', {
 
     getData: function (options) {
         var me = this;
+        options = options || {};
         var result = me.callParent(arguments);
-        if (options && options.associated && !options.includeMeta) {
+        if (!options.includeMeta) {
             delete result.meta;
         }
         return result;
@@ -1196,13 +1462,13 @@ Ext.define('Ext.ux.data.AsyncModel', {
         }
     },
 
-    set: function (fieldName, newValue, silent) {
+    set: function (fieldName, newValue, opts) {
         var me = this;
-        if (silent) {
+        if (opts && opts.silent) {
             me._suppressChangeEvent++;
         }
         me.callParent(arguments);
-        if (silent) {
+        if (opts && opts.silent) {
             me._suppressChangeEvent--;
         }
     },
@@ -1219,19 +1485,14 @@ Ext.define('Ext.ux.data.AsyncModel', {
         me.callJoined('afterValidChange', modifiedFieldNames);
     },
 
-    resetFieldValidation: function (fieldName) {
+    afterMetaDataChange: function (modifiedFieldNames) {
         var me = this;
-        var fieldValidationModel = me._validationModel[fieldName];
-        Ext.Array.erase(fieldValidationModel.callbacks, 0, fieldValidationModel.callbacks.length);
-        me._suppressValidChangeEvent = true;
-        me.resetValidationMessages(fieldName);
-        me.onFieldValidated(fieldName);
-        me._suppressValidChangeEvent = false;
+        me.callJoined('afterMetaDataChange', modifiedFieldNames);
     },
 
     getFieldValue: function (fieldName) {
         var me = this;
-        var field = Ext.Array.findBy(me._fields, function (field) { return field.name === fieldName; });
+        var field = Ext.Array.findBy(me._fieldsDescriptors, function (field) { return field.name === fieldName; });
         if (field && (field.isStoreField || field.isModelField)) {
             return field.instance();
         } else {
@@ -1239,17 +1500,32 @@ Ext.define('Ext.ux.data.AsyncModel', {
         }
     },
 
+    //region running validation
+
+    resetFieldValidation: function (fieldName) {
+        var me = this;
+        var fieldValidationModel = me._validationModel[fieldName];
+        fieldValidationModel.isValidating = false;
+        fieldValidationModel.isValidated = true;
+        fieldValidationModel.lastValidatingOptions = '{}';
+        fieldValidationModel.fieldState = 0;
+        fieldValidationModel.lastValidValue = me.get(fieldName);
+        Ext.Array.erase(fieldValidationModel.callbacks, 0, fieldValidationModel.callbacks.length);
+        me._suppressValidChangeEvent = true;
+        me.resetValidationMessages(fieldName);
+        me.onFieldValidated(fieldName);
+        me._suppressValidChangeEvent = false;
+    },
+
     performValidation: function (fieldName, options, callback) {
         var me = this;
         var fieldValidationModel = me._validationModel[fieldName];
-        var fieldValue = me.getFieldValue(fieldName);
         var currentOptions = JSON.stringify(options);
         var currentFieldState = fieldValidationModel.fieldState;
         var newValidation = currentOptions !== fieldValidationModel.lastValidatingOptions || currentFieldState !== fieldValidationModel.fieldState;
         if (newValidation) {
             fieldValidationModel.lastValidatingOptions = currentOptions;
         }
-        var validateFn = me._validationRules[fieldName];
         if (callback) {
             fieldValidationModel.callbacks.push(callback);
         }
@@ -1259,19 +1535,55 @@ Ext.define('Ext.ux.data.AsyncModel', {
                 fieldValidationModel.isValidating = false;
                 me.executeFieldValidationCallbacks(fieldName);
             } else {
-                if (validateFn) {
-                    validateFn.call(me, fieldValue, options, function (errorMessages, infoMessages) {
-                        if (currentFieldState === fieldValidationModel.fieldState && fieldValidationModel.lastValidatingOptions === currentOptions) {
+                fieldValidationModel.isValidated = false;
+                me.runFieldValidationRules(fieldName, options, function (errorMessages, infoMessages) {
+                    if (fieldValidationModel.lastValidatingOptions === currentOptions) {
+                        fieldValidationModel.isValidating = false;
+                        if (currentFieldState === fieldValidationModel.fieldState) {
                             me.setValidationMessages(fieldName, errorMessages, infoMessages);
+                            fieldValidationModel.isValidated = true;
                             me.onFieldValidated(fieldName);
+                        } else {
+                            me.performValidation(fieldName, options);
                         }
-                    });
-                } else {
-                    me.resetValidationMessages(fieldName);
-                    me.onFieldValidated(fieldName);
+                    }
+                });
+            }
+        } else if (!fieldValidationModel.isValidating) {
+            me.executeFieldValidationCallbacks(fieldName);
+        }
+    },
+
+    runFieldValidationRules: function (fieldName, options, callback) {
+        var me = this;
+        var fieldValidationRules = me._validationRules[fieldName];
+        var syncRules = Ext.Array.filter(fieldValidationRules, function (r) { return !r.isAsync; });
+        var asyncRules = Ext.Array.filter(fieldValidationRules, function (r) { return r.isAsync; });
+        var errorMessages = [];
+        var infoMessages = [];
+        var fieldValue = me.getFieldValue(fieldName);
+        Ext.Array.each(syncRules, function (syncRule) {
+            var syncValidationResult = syncRule.fn.call(syncRule.scope, fieldValue, me, options);
+            if (syncValidationResult.errorMessage) { errorMessages.push(syncValidationResult.errorMessage); }
+            if (syncValidationResult.infoMessage) { infoMessages.push(syncValidationResult.infoMessage); }
+        });
+        if (!errorMessages.length && asyncRules.length) {
+            var asyncValidationCounter = asyncRules.length;
+            var asyncRuleCallback = function (errorMessage, infoMessage) {
+                asyncValidationCounter--;
+                if (errorMessage) { errorMessages.push(errorMessage); }
+                if (infoMessage) { infoMessages.push(infoMessage); }
+                if (!asyncValidationCounter) {
+                    callback(errorMessages, infoMessages);
                 }
             }
+            Ext.Array.forEach(asyncRules, function (asyncRule) {
+                asyncRule.fn.call(asyncRule.scope, fieldValue, me, options, asyncRuleCallback);
+            });
+        } else {
+            callback(errorMessages, infoMessages);
         }
+
     },
 
     executeFieldValidationCallbacks: function (fieldName) {
@@ -1306,170 +1618,202 @@ Ext.define('Ext.ux.data.AsyncModel', {
         fieldValidationModel.isValidating = false;
         me.validateField(fieldName, null);
     },
+    //endregion
 
-    afterMetaDataChange: function (modifiedFieldNames) {
-        var me = this;
-        me.callJoined('afterMetaDataChange', modifiedFieldNames);
-    },
-
+    //region running business rules
     runBusinessRule: function (fieldName, ruleType) {
         var me = this;
         var businessRuleName = fieldName + ruleType;
         if (me._businessRules[businessRuleName]) {
-            me._businessRulesSyncCounter++;
-            me._businessRules[businessRuleName](me.get(fieldName), me._businessRuleCompletedCallback);
+            me.callBusinessRuleFn(function (model, callback) {
+                var rule = me._businessRules[businessRuleName];
+                rule.fn.call(rule.fn.scope, me.getFieldValue(fieldName), me, callback);
+            });
         }
     },
 
-    tryCreateStandardValidator: function (ruleDefinition) {
+    callBusinessRuleFn: function (businessRuleFn, scope) {
+        var me = this;
+        me._businessRulesSyncCounter++;
+        businessRuleFn.call(scope, me, me._businessRuleCompletedCallback);
+    },
+    //endregion
+
+    //region creating mapped rules
+    createFieldAutomaticValidationRules: function (fieldName) {
+        var me = this;
+        var result = [];
+        var fieldDescriptor = me.getFieldDescriptor(fieldName);
+        var fieldMetaDataNames = me.getMetaDataNames(fieldName);
+        var processedDescriptors = [];
+        Ext.Object.each(me._validatorRegistry, function (fieldAttributeName, validatorDescriptor) {
+            if (Ext.Array.contains(processedDescriptors, validatorDescriptor)) { return; }//this is to avoid creation of the same validator by alias
+
+            if (Ext.Array.contains(fieldMetaDataNames, fieldAttributeName) || validatorDescriptor.activator(me, fieldDescriptor.name, fieldAttributeName)) {
+                var rule = me.createAutomaticValidationRule(fieldDescriptor, validatorDescriptor, fieldAttributeName);
+                processedDescriptors.push(validatorDescriptor);
+                result.push(rule);
+            }
+        });
+        return result;
+    },
+
+    createAutomaticValidationRule: function (fieldDescriptor, validatorDescriptor, fieldAttributeName) {
+        var me = this;
+        var ruleConfig = validatorDescriptor.validator;
+        if (Ext.isString(ruleConfig)) {
+            ruleConfig = {
+                type: ruleConfig,
+                fieldName: fieldDescriptor.name
+            };
+        } else if (Ext.isObject(ruleConfig)) {
+            ruleConfig = Ext.clone(ruleConfig);
+            ruleConfig.fieldName = fieldDescriptor.name;
+        } else if (Ext.isFunction(ruleConfig)) {
+            ruleConfig = ruleConfig(fieldDescriptor);
+            for (var prop in ruleConfig) {
+                if (!Ext.isDefined(ruleConfig[prop])) { delete ruleConfig[prop]; }
+            }
+        } else {
+            Ext.Error.raise("Validator is improperly defined. Detected while creating validation rules for '" + fieldDescriptor.name + "'");
+        }
+        var ruleName = '';
+        var rule = me.createStandardValidationRule(ruleName, ruleConfig);
+        if (!rule) {
+            Ext.Error.raise("Failed to create validation rule");
+        }
+        var activationRule = validatorDescriptor.activator;
+        if (rule.isAsync) {
+            var originalValidationFn = rule.fn;
+            rule.fn = function (fieldValue, options, callback) {
+                if (activationRule(me, fieldDescriptor.name, fieldAttributeName)) {
+                    originalValidationFn.apply(rule.scope, arguments)
+                } else {
+                    Ext.callback(callback, null, ['', '']);
+                }
+            };
+        } else {
+            var originalValidationFn = rule.fn;
+            rule.fn = function () {
+                if (activationRule(me, fieldDescriptor.name, fieldAttributeName)) {
+                    return originalValidationFn.apply(rule.scope, arguments)
+                } else {
+                    return {
+                        errorMessage: '',
+                        infoMessage: ''
+                    }
+                }
+            };
+        }
+        return rule;
+    },
+    //endregion
+
+    //region creating standard validation rules
+    createFieldStandardValidationRule: function (fieldName, ruleDefinition) {
         var me = this;
         var result = null;
         if ((Ext.isString(ruleDefinition) && ruleDefinition.indexOf('.') === -1) || Ext.isObject(ruleDefinition)) {
-            result = me.createStandardValidator(ruleDefinition);
+            var ruleConfig = { fieldName: fieldName };
+            var ruleName = null;
+            if (Ext.isObject(ruleDefinition)) {
+                Ext.apply(ruleConfig, ruleDefinition);
+                ruleName = ruleDefinition.name;
+                delete ruleConfig.name;
+            } else {
+                ruleConfig.type = ruleDefinition;
+            }
+            result = me.createStandardValidationRule(ruleName, ruleConfig);
         }
         return result;
     },
 
-    createMappedValidators: function (fieldName) {
+    createStandardValidationRule: function (ruleName, ruleConfig) {
         var me = this;
-        var result = [];
-        var field = me.getField(fieldName);
-        Ext.Array.forEach(me.getMetaDataNames(), function (metaDataName) {
-            if (me._metaDataValidatorsMap[metaDataName]) {
-                var validator = me.createMappedValidator(field, me._metaDataValidatorsMap[metaDataName]);
-                result.push(validator);
-            }
-        });
-        return result;
+        var rule;
+        try {//we can't detect the type of validator from ruleConfig. So, we are trying to create sync validator first
+            rule = me.createStandardSyncValidationRule(ruleName, ruleConfig);
+        } catch (ex) { }
+        rule = rule || me.createStandardAsyncValidationRule(ruleName, ruleConfig);
+        return rule;
     },
 
-    createMappedValidator: function (field, mappingData) {
+    createStandardSyncValidationRule: function (ruleName, ruleConfig) {
         var me = this;
-        var validatorConfig = mappingData.config;
-        if (Ext.isString(validatorConfig)) {
-            validatorConfig = { type: validatorConfig };
+        var validator;
+        if (ruleConfig instanceof Ext.data.validator.Validator) {
+            validator = ruleConfig;
         } else {
-            validatorConfig = Ext.apply({}, validatorConfig);
+            try {
+                validator = Ext.Factory.dataValidator(ruleConfig);
+            } catch (ex) { }
         }
-
-        validatorConfig.fieldName = field.name;
-
-        var fieldConfigReplications = mappingData.fieldConfigReplications;
-        if (fieldConfigReplications) {
-            Ext.Array.each(fieldConfigReplications, function (fieldConfigName) {
-                if (field[fieldConfigName] !== undefined) {
-                    validatorConfig[fieldConfigName] = field[fieldConfigName];
-                }
-            });
-        }
-
-        var activationRule = mappingData.activationRule;
-        var standardValidator = me.createStandardValidator(validatorConfig);
-        return function () {
-            if (activationRule(me, field.name)) {
-                return standardValidator.apply(window, arguments);
-            } else {
-                return {
-                    errorMessage: '',
-                    infoMessage: ''
-                }
-            }
-        }
-    },
-
-    createStandardValidator: function (validatorConfig) {
-        var me = this;
-        var validator = Ext.Factory.dataValidator(validatorConfig);
-        var validateFn = null;
-        if (validator instanceof Ext.data.validator.ParametrizedValidator) {
-            validateFn = Ext.bind(validator.validateWithOptions, validator);
-        } else {
-            validateFn = function (fieldValue, record, options) {
-                return validator.validate(fieldValue, record);
-            }
-        }
-
-        return function (fieldValue, options) {
-            var validationResult = validateFn(fieldValue, me, options);
-            var errorMessage = '';
-            if (validationResult !== true) {
-                if (!Ext.isString(validationResult) || !validationResult) {
-                    errorMessage = me.defaultFieldErrorMessage;
-                } else {
-                    errorMessage = validationResult;
-                }
-            }
-            return {
-                errorMessage: errorMessage,
-                infoMessage: validator.getInfoMessage ? validator.getInfoMessage() || '' : ''
-            }
-        }
-    },
-
-    createValidationRule: function (fieldName) {
-        var me = this;
-        var ruleDefinitions = Ext.Array.from(me.validationRules[fieldName]);
-        var syncRules = me.createMappedValidators(fieldName);
-        var asyncRules = [];
-        Ext.Array.each(ruleDefinitions, function (ruleDefinition) {
-            var syncRule = me.tryCreateStandardValidator(ruleDefinition);
-            if (syncRule) {
-                syncRules.push(syncRule);
-            } else {
-                asyncRules.push(me.createAsyncRule(ruleDefinition, fieldName, me.defaultValidationService));
-            }
-        });
-        if (!asyncRules.length && !syncRules.length) {
+        if (!validator) {
             return null;
         }
-        return function (fieldValue, options, callback) {
-            var errorMessages = [];
-            var infoMessages = [];
-            Ext.Array.each(syncRules, function (syncRule) {
-                var syncValidationResult = syncRule(fieldValue, options);
-                if (syncValidationResult.errorMessage) { errorMessages.push(syncValidationResult.errorMessage); }
-                if (syncValidationResult.infoMessage) { infoMessages.push(syncValidationResult.infoMessage); }
-            });
-            if (!errorMessages.length && asyncRules.length) {
-                var asyncValidationCounter = asyncRules.length;
-                var asyncRuleCallback = function (errorMessage, infoMessage) {
-                    asyncValidationCounter--;
-                    if (errorMessage) { errorMessages.push(errorMessage); }
-                    if (infoMessage) { infoMessages.push(infoMessage); }
-                    if (!asyncValidationCounter) {
-                        callback(errorMessages, infoMessages);
-                    }
-                }
-                Ext.Array.each(asyncRules, function (asyncRule) {
-                    asyncRule.call(me, fieldValue, options, asyncRuleCallback);
-                });
-            } else {
-                callback(errorMessages, infoMessages);
-            }
-        }
+        Ext.ux.data.validator.ParametrizedValidator.decorateStandard(validator);
+        return {
+            isAsync: false,
+            name: ruleName || Ext.id(validator, 'StandardSyncValidationRule-' + validator.type + '-'),
+            fn: validator.validateWithOptions,
+            scope: validator
+        };
     },
 
-    createAsyncRule: function (rule, fieldName, defaultScopeName) {
+    createStandardAsyncValidationRule: function (ruleName, ruleConfig) {
+        var me = this;
+        var validator;
+        if (ruleConfig instanceof Ext.ux.data.validator.AsyncValidator) {
+            validator = ruleConfig;
+        } else {
+            try {
+                var validator = Ext.Factory.dataAsyncValidator(ruleConfig);
+            } catch (ex) { }
+        }
+        if (!validator) {
+            return null;
+        }
+        if (validator) {
+            return {
+                isAsync: true,
+                name: ruleName || Ext.id(validator, 'StandardAsyncValidationRule-' + validator.type + '-'),
+                fn: validator.validate,
+                scope: validator
+            };
+        }
+    },
+    //endregion
+
+    //region creating validation rules
+    createValidationRule: function (ruleDefinition, fieldName) {
+        var me = this;
+        return me.createFieldStandardValidationRule(fieldName, ruleDefinition) || me.createAsyncRule(fieldName, ruleDefinition, me.defaultValidationService);
+    },
+    //endregion
+
+    createAsyncRule: function (fieldName, ruleDefinition, defaultScopeName) {
         var me = this;
         var ruleConfig = { fieldName: fieldName };
-        if (Ext.isObject(rule)) {
-            Ext.apply(ruleConfig, rule);
-            rule = rule.descriptor;
-            delete ruleConfig.descriptor;
-        }
-
         var ruleFn;
         var ruleScope;
-        var ruleArgs;
-
-        if (Ext.isFunction(rule)) {
-            ruleFn = rule;
-            ruleScope = me;
-            ruleArgs = [ruleConfig];
+        var ruleDescriptor;
+        if (Ext.isObject(ruleDefinition)) {
+            Ext.apply(ruleConfig, ruleDefinition);
+            ruleDescriptor = rule.descriptor;
+            delete ruleConfig.descriptor;
         } else {
-            var scopeName = defaultScopeName;
-            var methodName = rule;
-            var methodPathParts = rule.split('.');
+            ruleDescriptor = ruleDefinition;
+        }
+
+        var ruleName = ruleConfig.name || Ext.id(me, 'AsyncRule');
+        delete ruleConfig.name;
+        if (Ext.isFunction(ruleDescriptor)) {
+            ruleFn = Ext.bind(ruleDescriptor, me, [ruleConfig], 0);
+            ruleScope = me;
+        } else {
+            var scopeName = defaultScopeName || 'this';
+            var methodName = ruleDescriptor;
+            var methodPathParts = ruleDescriptor.split('.');
             if (methodPathParts.length === 2) {
                 scopeName = methodPathParts[0];
                 methodName = methodPathParts[1];
@@ -1478,26 +1822,71 @@ Ext.define('Ext.ux.data.AsyncModel', {
                 if (!me[methodName]) {
                     Ext.Error.raise(methodName + ' is not defined');
                 }
-                ruleFn = me[methodName];
                 ruleScope = me;
-                ruleArgs = [ruleConfig];
             } else {
                 if (Deft.Injector.canResolve(scopeName)) {
                     ruleScope = Deft.Injector.resolve(scopeName);
                 } else {
                     ruleScope = me[scopeName];
                 }
-                ruleFn = ruleScope[methodName];
-                ruleArgs = [me, ruleConfig];
             }
+            ruleFn = Ext.bind(ruleScope[methodName], ruleScope, [ruleConfig], 0);
         }
-        return Ext.bind(ruleFn, ruleScope, ruleArgs, 0);
+        return {
+            isAsync: true,
+            name: ruleName,
+            fn: ruleFn,
+            scope: ruleScope
+        };
+    },
+
+    getDefaultData: function (excludedFields) {
+        var me = this;
+        var result = {};
+        Ext.Array.forEach(me._fieldsDescriptors, function (field) {
+            if (!excludedFields || !Ext.Array.contains(excludedFields, field.name)) {
+                result[field.name] = me.getDefaultFieldValue(field.name);
+            }
+        });
+        return result;
+    },
+
+    getDefaultFieldValue: function (fieldName) {
+        var me = this;
+        var fieldDescriptor = me.getFieldDescriptor(fieldName);
+        var fieldValue = me.getFieldValue(fieldName);
+        var allowNull = fieldDescriptor.allowNull;
+        var fieldDefaultValue = fieldDescriptor.defaultValue;
+        var result = null;
+        if (fieldDescriptor.isModelField) {
+            if (fieldValue) {
+                result = fieldValue.getDefaultData();
+            }
+        } else if (fieldDescriptor.isStoreField || Ext.isArray(fieldValue)) {
+            result = fieldDefaultValue || [];
+        } else if (Ext.isString(fieldValue)) {
+            result = fieldDefaultValue || '';
+        } else if (Ext.isNumber(fieldValue)) {
+            result = fieldDefaultValue || (allowNull ? null : 0);
+        } else if (Ext.isBoolean(fieldValue)) {
+            result = fieldDefaultValue || (allowNull ? null : false);
+        } else if (Ext.isDate(fieldValue)) {
+            result = fieldDefaultValue || (allowNull ? null : '');
+        }
+        return result;
+    },
+
+    getField: function (fieldName) {
+        var me = this;
+        return Ext.Array.findBy(me.getFields(), function (field) {
+            return field.name === fieldName;
+        });
     },
 
     clearAllFields: function (excludedFields) {
         var me = this;
         me.beginEdit();
-        Ext.Array.forEach(me._fields, function (field) {
+        Ext.Array.forEach(me._fieldsDescriptors, function (field) {
             if (!excludedFields || !Ext.Array.contains(excludedFields, field.name)) {
                 me.clearField(field.name);
             }
@@ -1507,34 +1896,25 @@ Ext.define('Ext.ux.data.AsyncModel', {
 
     clearField: function (fieldName) {
         var me = this;
-        var field = me.getField(fieldName);
-        var fieldValue = me.getFieldValue(fieldName);
-        var useNull = field.useNull;
-        var defaultValue = field.defaultValue;
-        var clearedValue = null;
+        var field = me.getFieldDescriptor(fieldName);
         if (field.isModelField || field.isStoreField) {
+            var fieldValue = me.getFieldValue(fieldName);
             if (fieldValue) {
                 fieldValue.clear();
             }
             return;
         }
-        if (Ext.isString(fieldValue)) {
-            clearedValue = defaultValue || '';
-        } else if (Ext.isArray(fieldValue)) {
-            clearedValue = defaultValue || [];
-        } else if (Ext.isNumber(fieldValue)) {
-            clearedValue = defaultValue || (useNull ? null : 0);
-        } else if (Ext.isBoolean(fieldValue)) {
-            clearedValue = defaultValue || (useNull ? null : false);
-        } else if (Ext.isDate(fieldValue)) {
-            clearedValue = defaultValue || (useNull ? null : '');
-        }
-        me.set(fieldName, clearedValue);
+        me.set(fieldName, me.getDefaultFieldValue(fieldName));
     },
 
     getNumOfFields: function () {
         var me = this;
-        return me._fields.length;
+        return me._fieldsDescriptors.length;
+    },
+
+    getNumOfComplexFields: function () {
+        var me = this;
+        return Ext.Array.filter(me._fieldsDescriptors, function (field) { return field.isStoreField || field.isModelField; }).length;
     },
 
     fireChangeEvent: function (modifiedFieldNames) {
@@ -1562,7 +1942,8 @@ Ext.define('Ext.ux.data.AsyncModel', {
 
     subscribeNestedStore: function (store, fieldName) {
         var me = this;
-        store.on('datachanged', me.onNestedStoreChange, me, { fieldName: fieldName });
+        store.on('add', me.onNestedStoreAdd, me, { fieldName: fieldName });
+        store.on('remove', me.onNestedStoreRemove, me, { fieldName: fieldName });
         store.on('update', me.onNestedStoreUpdate, me, { fieldName: fieldName });
     },
 
@@ -1603,7 +1984,7 @@ Ext.define('Ext.ux.data.AsyncModel', {
         }
     },
 
-    onNestedStoreChange: function (store, options) {
+    onNestedStoreChange: function (store, record, index, options) {
         var me = this;
         if (me.editing) {
             me._modifiedNestedFieldNames.push(options.fieldName);
@@ -1612,9 +1993,19 @@ Ext.define('Ext.ux.data.AsyncModel', {
         }
     },
 
-    getField: function (fieldName) {
+    onNestedStoreRemove: function (store, record, index, isMove, options) {
         var me = this;
-        return Ext.Array.findBy(me._fields, function (f) { return f.name === fieldName; });
+        me.onNestedStoreChange(store, record, index, options);
+    },
+
+    onNestedStoreAdd: function (store, record, index, options) {
+        var me = this;
+        me.onNestedStoreChange(store, record, index, options);
+    },
+
+    getFieldDescriptor: function (fieldName) {
+        var me = this;
+        return Ext.Array.findBy(me._fieldsDescriptors, function (f) { return f.name === fieldName; });
     },
 
     getStuckValidations: function () {
@@ -1662,41 +2053,40 @@ Ext.define('Ext.ux.data.AsyncModel', {
             cls._businessRules = proto._businessRules = businessRules;
         },
 
-        initMetaDataValidatorsMap: function (data, cls, proto) {
-            var metaDataValidatorsMap = {};
-            if (proto._metaDataValidatorsMap) {
-                var superMetaDataValidatorsMap = proto._metaDataValidatorsMap;
-                delete proto._metaDataValidatorsMap;
-                metaDataValidatorsMap = Ext.merge(metaDataValidatorsMap, superMetaDataValidatorsMap);
+        initValidatorsMap: function (data, cls, proto) {
+            var validatorsMap = {};
+            if (proto._validatorsMap) {
+                var superValidatorsMap = proto._validatorsMap;
+                delete proto._validatorsMap;
+                validatorsMap = Ext.merge(validatorsMap, superValidatorsMap);
             }
 
-            if (data._metaDataValidatorsMap) {
-                var metaDataValidatorsMapDefs = data._metaDataValidatorsMap;
-                delete data._metaDataValidatorsMap;
-                metaDataValidatorsMap = Ext.merge(metaDataValidatorsMap, metaDataValidatorsMapDefs);
+            if (data._validatorsMap) {
+                var validatorsMapDefs = data._validatorsMap;
+                delete data._validatorsMap;
+                validatorsMap = Ext.merge(validatorsMap, validatorsMapDefs);
             }
-            cls._metaDataValidatorsMap = proto._metaDataValidatorsMap = metaDataValidatorsMap;
+            cls._validatorsMap = proto._validatorsMap = validatorsMap;
         }
     }
 },
-function () {
-    var Model = this;
+    function () {
+        var Model = this;
 
-    Model.onExtended(function (cls, data) {
-        var proto = cls.prototype;
+        Model.onExtended(function (cls, data) {
+            var proto = cls.prototype;
 
-        Model.initValidationRules(data, cls, proto);
-        Model.initBusinessRules(data, cls, proto);
-        Model.initMetaDataValidatorsMap(data, cls, proto);
+            Model.initValidationRules(data, cls, proto);
+            Model.initBusinessRules(data, cls, proto);
+            Model.initValidatorsMap(data, cls, proto);
+        });
     });
-});
 
 Ext.data.Model.addStatics({
     METACHANGE: 'metachange',
     VALIDCHANGE: 'validchange',
     VALIDATED: 'validated'
 });
-///#source 1 1 /src/AsyncStore.js
 //https://github.com/slimjack/ExtJs-AsyncModel
 
 //Ext.ux.data.AsyncStore can be used only with Ext.ux.data.AsyncModel
@@ -1731,7 +2121,6 @@ Ext.define('Ext.ux.data.AsyncStore', {
                     } else {
                         me._businessLogicSyncCallbacks.push(callback);
                     }
-
                 },
 
                 clear: function () {
@@ -1871,6 +2260,580 @@ Ext.define('Ext.ux.data.AsyncStore', {
                 }
                 //endregion
             });
+        }
+    }
+});
+//https://github.com/slimjack/ExtJs-AsyncModel
+
+Ext.define('Ext.ux.plugin.GridMetaDataBinding', {
+    alias: 'plugin.gridmetadatabinding',
+    extend: 'Ext.AbstractPlugin',
+    inject: {
+        gridMetaDataBinders: 'IGridMetaDataBinder[]'
+    },
+
+    mixins: [
+        'Ext.util.Observable'
+    ],
+
+    init: function (grid) {
+        var me = this;
+        me._owner = grid;
+        me.mixins.observable.constructor.call(me);
+        me.callParent(arguments);
+        me.initBinders();
+    },
+
+    initBinders: function () {
+        var me = this;
+        if (!me._bindersInitialized) {
+            me.overrideColumnRenderers();
+            me.overrideGridViewOnUpdate(me._owner);
+            me.mon(me._owner, {
+                reconfigure: {
+                    fn: me.onReconfigure,
+                    scope: me
+                }
+            });
+            Ext.Array.each(me.gridMetaDataBinders, function (binder) {
+                binder.onInit(me._owner, me);
+            });
+            me._bindersInitialized = true;
+        }
+    },
+
+    destroy: function () {
+        var me = this;
+        if (me._bindersInitialized) {
+            Ext.Array.each(me.gridMetaDataBinders, function (binder) {
+                binder.onDestroy(me._owner, me);
+            });
+        }
+    },
+
+    getMetaDataMap: function (grid) {
+        var columns = grid.columns;
+        var metaDataMap = null;
+        Ext.each(columns, function (column) {
+            if (column.metaDataIndex) {
+                metaDataMap = metaDataMap || {};
+                if (!metaDataMap[column.metaDataIndex]) {
+                    metaDataMap[column.metaDataIndex] = [];
+                }
+                metaDataMap[column.metaDataIndex].push(column.dataIndex);
+            }
+        });
+        return metaDataMap;
+    },
+
+    onReconfigure: function (grid, store, columns, oldStore, oldColumns, eOpts) {
+        var me = this;
+        if (columns) {
+            me.overrideColumnRenderers();
+        }
+    },
+
+    overrideGridViewOnUpdate: function (grid) {
+        var me = this;
+        var metaDataMap = me.getMetaDataMap(grid);
+        var gridView = grid.getView();
+        var originalOnUpdate = gridView.onUpdate;
+        if (metaDataMap) {
+            gridView.onUpdate = function (store, record, operation, changedFieldNames) {
+                if (operation !== Ext.data.Model.VALIDCHANGE) {
+                    if (operation === Ext.data.Model.METACHANGE) {
+                        arguments[3] = me.updateChangedFieldNames(changedFieldNames, metaDataMap);
+                    }
+                    originalOnUpdate.apply(gridView, arguments);
+                }
+            };
+        } else {
+            gridView.onUpdate = function (store, record, operation) {
+                if (operation !== Ext.data.Model.VALIDCHANGE) {
+                    originalOnUpdate.apply(gridView, arguments);
+                }
+            };
+        }
+    },
+
+    updateChangedFieldNames: function (changedFieldNames, metaDataMap) {
+        var result = Ext.Array.clone(changedFieldNames);
+        Ext.each(changedFieldNames, function (fieldName) {
+            var mappedDataIndexes = metaDataMap[fieldName];
+            if (mappedDataIndexes) {
+                result = result.concat(mappedDataIndexes);
+            }
+        });
+        return result;
+    },
+
+    overrideColumnRenderers: function () {
+        var me = this;
+        var columns = me._owner.columns;
+        Ext.each(columns, function (column) {
+            var oldRenderer = column.renderer;
+            var colRenderer;
+            if (column.xtype === 'rownumberer') {
+                return;
+            }
+            if (oldRenderer) {
+                colRenderer = function (value, metadata, record, rowIndex, colIndex, store, view) {
+                    value = me.renderer(value, metadata, record, rowIndex, colIndex, store, view);
+                    value = oldRenderer.apply(this, [value, metadata, record, rowIndex, colIndex, store, view]);
+                    return value;
+                };
+            } else {
+                colRenderer = Ext.bind(me.renderer, me);
+            }
+
+            Ext.apply(column, {
+                renderer: colRenderer,
+                hasCustomRenderer: true
+            });
+        });
+    },
+
+    renderer: function (value, metadata, record, rowIndex, colIndex, store, view) {
+        var me = this;
+        var dataIndex = metadata.column.dataIndex;
+
+        if (dataIndex) {
+            Ext.Array.each(me.gridMetaDataBinders, function (binder) {
+                binder.onRender(metadata, record, rowIndex, colIndex, store, view);
+            });
+        }
+        return value;
+    }
+});
+//https://github.com/slimjack/ExtJs-AsyncModel
+
+Ext.define('Ext.ux.plugin.MetaDataBinding', {
+    alias: 'plugin.metadatabinding',
+    extend: 'Ext.AbstractPlugin',
+    inject: {
+        metaDataBinders: 'IMetaDataBinder[]'
+    },
+
+    pathDelimiter: '.',
+
+    init: function (owner) {
+        var me = this;
+        owner._metaDataBindable = true;
+        me._formFields = new DynamicComponentQuery(owner,
+            '[isFormField]:not([excludeForm]):not([bindMeta=false])',//query form fields which doesn't reject meta data binding
+            '[_metaDataBindable] [isFormField]');//exclude form fields which are placed in container with 'metadatabinding' plugin applied
+        me._metaDataBinders = Ext.ux.util.Lookup.fromArray(me.metaDataBinders, function (binder) { return binder.getMetaDataName(); });
+        me._modelBindingCallbacks = new Ext.ux.util.Lookup();
+        me._modelBinds = {};
+        me._formFields.every(function (component) {
+            if (!component._metaBound) {
+                me.bindComponent(component);
+                component._metaBound = true;
+            }
+        });
+        me._formFields.everyRemoved(function (component) {
+            if (component._metaBound) {
+                me.unbindComponent(component);
+                delete component._metaBound;
+            }
+        });
+    },
+
+    bindComponent: function (component) {
+        var me = this;
+        var bind = component.getBind();
+        if (bind && bind.value && component.bindMeta !== false) {
+            var fieldPath = bind.value.stub.path;
+            var fieldPathParts = fieldPath.split(me.pathDelimiter);
+            if (fieldPathParts.length < 2) {
+                //this is not a bind to model
+                return;
+            }
+            var fieldName = fieldPathParts[fieldPathParts.length - 1];
+            var modelPath = fieldPathParts.slice(0, -1).join(me.pathDelimiter);
+            var metaBasePathParts = Ext.Array.insert(fieldPathParts, fieldPathParts.length - 1, 'meta');
+            var metaBasePath = metaBasePathParts.join(me.pathDelimiter);
+
+            var viewModel = component.lookupViewModel();
+            var model = viewModel.get(modelPath);
+            if (!model) {
+                if (!me._modelBinds[modelPath]) {
+                    var modelBindDescriptor = '{' + modelPath + '}';
+                    me._modelBinds[modelPath] = viewModel.bind(modelBindDescriptor, function (modelInstance) {
+                        if (modelInstance) {
+                            me._modelBindingCallbacks.eachForKey(modelPath, function (callback) { callback(modelInstance); });
+                            me._modelBindingCallbacks.removeKey(modelPath);
+                            me._modelBinds[modelPath].destroy();
+                        }
+                    });
+                }
+                me._modelBindingCallbacks.add(modelPath, function (modelInstance) {
+                    me.bindComponentToModelField(component, modelInstance, fieldName, metaBasePath);
+                });
+            } else {
+                me.bindComponentToModelField(component, model, fieldName, metaBasePath);
+            }
+        }
+    },
+
+    unbindComponent: function (component) {
+        var me = this;
+        if (component._metaBinds) {
+            Ext.Array.forEach(component._metaBinds, function (metaBind) {
+                metaBind.bind.destroy();
+                metaBind.binder.onComponentUnbound(component);
+            });
+        }
+    },
+
+    bindComponentToModelField: function (component, modelInstance, fieldName, metaBasePath) {
+        var me = this;
+        if (modelInstance instanceof Ext.ux.data.AsyncModel) {
+            var viewModel = component.lookupViewModel();
+            var metaNames = modelInstance.getMetaDataNames(fieldName);
+            if (Ext.isObject(component.bindMeta)) {
+                metaNames = Ext.Array.filter(metaNames, function (metaName) { return !!component.bindMeta[metaName]; });
+            }
+            var metaVMBinds = [];
+            Ext.Array.forEach(metaNames, function (metaName) {
+                var metaBinder = me.getMetaDataBinder(component, metaName);
+                if (metaBinder) {
+                    metaBinder.onComponentBound(component, modelInstance, fieldName);
+                    metaBinder.applyMetaData(component, modelInstance.getMetaValue(fieldName, metaName), modelInstance, fieldName);
+                    var metaPath = metaBasePath + me.pathDelimiter + metaName;
+                    var bindDescriptor = '{' + metaPath + '}';
+                    var metaVMBind = viewModel.bind(bindDescriptor, function (metaValue) {
+                        metaBinder.applyMetaData(component, metaValue, modelInstance, fieldName);
+                    });
+                    metaVMBinds.push({
+                        bind: metaVMBind,
+                        binder: metaBinder
+                    });
+                }
+            });
+            component._metaBinds = metaVMBinds;
+        }
+    },
+
+    getMetaDataBinder: function (control, metaDataFieldName) {
+        var me = this;
+        var result;
+        var maxSpecificity = 0;
+        me._metaDataBinders.eachForKey(metaDataFieldName, function (metaDataBinder) {
+            var currentSpecificity = metaDataBinder.isApplicable(control);
+            currentSpecificity = currentSpecificity === true ? 1 : (Ext.isNumber(currentSpecificity) ? currentSpecificity : 0);
+            if (currentSpecificity > maxSpecificity) {
+                result = metaDataBinder;
+                maxSpecificity = currentSpecificity;
+            }
+        });
+        return result;
+    }
+});
+//https://github.com/slimjack/ExtJs-AsyncModel
+
+Ext.defineInterface('IMetaDataBinder', {
+    inherit: 'ISingleton',
+    methods: [
+        'isApplicable',
+        'onComponentBound',
+        'onComponentUnbound',
+        'applyMetaData'//(control, metaDataFieldName, metaValue, model, fieldName)
+    ],
+    properties: [
+        { name: 'listenedMetaDataNames', readOnly: true },
+        { name: 'metaDataName', readOnly: true }
+    ]
+});
+//https://github.com/slimjack/ExtJs-AsyncModel
+
+Ext.define('Ext.ux.binder.AbstractFormFieldBinder', {
+    implement: 'IMetaDataBinder',
+    abstractClass: true,
+
+    getMetaDataName: function () {
+        if (!this.metaDataName) {
+            Ext.Error.raise('metaDataName not defined');
+        }
+        return this.metaDataName;
+    },
+
+    getListenedMetaDataNames: function () {
+        if (!this.metaDataName) {
+            Ext.Error.raise('metaDataName not defined');
+        }
+        return [this.metaDataName];
+    },
+
+    onComponentBound: function (formField, model, modelFieldName) { },
+
+    onComponentUnbound: function (formField) { },
+
+    isApplicable: function (control) {
+        return control.isFormField;
+    },
+
+    applyMetaData: function (control, metaValue, model, fieldName) { },
+
+    applyPlugin: function (formField, plugin) {
+        var ptype = Ext.isString(plugin) ? plugin : plugin.ptype;
+        if (!formField.findPlugin(ptype)) {
+            formField.addPlugin(plugin);
+        }
+    }
+});
+
+//https://github.com/slimjack/ExtJs-AsyncModel
+
+Ext.define('Ext.ux.binder.FormFieldDisplayNameBinder', {
+    extend: 'Ext.ux.binder.AbstractFormFieldBinder',
+    metaDataName: 'displayName',
+
+    applyMetaData: function (control, metaValue, model, fieldName) {
+        if (Ext.isString(metaValue)) {
+            control.setFieldLabel(metaValue);
+        }
+    }
+});
+
+//https://github.com/slimjack/ExtJs-AsyncModel
+
+Ext.define('Ext.ux.binder.FormFieldReadOnlyBinder', {
+    extend: 'Ext.ux.binder.AbstractFormFieldBinder',
+    metaDataName: 'readOnly',
+
+    onComponentBound: function (formField, model, modelFieldName) {
+        this.applyPlugin(formField, 'readonlylatching');
+    },
+
+    applyMetaData: function (control, metaValue, model, fieldName) {
+        if (metaValue) {
+            control.latchReadOnly();
+        } else {
+            control.unlatchReadOnly();
+        }
+    }
+});
+//https://github.com/slimjack/ExtJs-AsyncModel
+
+Ext.define('Ext.ux.binder.FormFieldRequiredBinder', {
+    extend: 'Ext.ux.binder.AbstractFormFieldBinder',
+
+    requiredClassName: 'requiredField',
+    metaDataName: 'required',
+
+    applyMetaData: function (control, metaValue, modelRecord, fieldName) {
+        var me = this;
+        var requiredClassName = (control.requiredClassName === undefined) ? me.requiredClassName : control.requiredClassName;
+        if (metaValue && !modelRecord.getMetaValue(fieldName, 'readOnly')) {
+            control.addCls(requiredClassName);
+        } else {
+            control.removeCls(requiredClassName);
+        }
+    }
+});
+//https://github.com/slimjack/ExtJs-AsyncModel
+
+Ext.define('Ext.ux.binder.FormFieldDesiredBinder', {
+    extend: 'Ext.ux.binder.AbstractFormFieldBinder',
+
+    desiredClassName: 'desiredField',
+    metaDataName: 'desired',
+
+    applyMetaData: function (control, metaValue, modelRecord, fieldName) {
+        var me = this;
+        var desiredClassName = (control.desiredClassName === undefined) ? me.desiredClassName : control.desiredClassName;
+        if (metaValue && !modelRecord.getMetaValue(fieldName, 'readOnly')) {
+            control.addCls(desiredClassName);
+        } else {
+            control.removeCls(desiredClassName);
+        }
+    }
+});
+//https://github.com/slimjack/ExtJs-AsyncModel
+
+Ext.define('Ext.ux.binder.FormFieldValidationBinder', {
+    extend: 'Ext.ux.binder.AbstractFormFieldBinder',
+    metaDataName: 'validationErrorMessages',
+
+    onComponentBound: function (formField, model, modelFieldName) {
+        this.applyPlugin(formField, 'externalvalidating');
+    },
+
+    applyMetaData: function (control, metaValue, model, fieldName) {
+        control.setExternalErrors('modelValidation', metaValue);
+    }
+});
+
+//https://github.com/slimjack/ExtJs-AsyncModel
+
+Ext.define('Ext.ux.binder.TextFieldCasingBinder', {
+    extend: 'Ext.ux.binder.AbstractFormFieldBinder',
+    metaDataName: 'textCase',
+
+    onComponentBound: function (formField, model, modelFieldName) {
+        this.applyPlugin(formField, 'fieldcasing');
+    },
+
+    applyMetaData: function (formField, metaValue, model, fieldName) {
+        var me = this;
+        formField.setCasing(metaValue);
+    },
+
+    isApplicable: function (control) {
+        return this.callParent(arguments) && (control instanceof Ext.form.field.Text);
+    }
+});
+
+//https://github.com/slimjack/ExtJs-AsyncModel
+
+Ext.define('Ext.ux.binder.TextFieldDisplaySecuredBinder', {
+    extend: 'Ext.ux.binder.AbstractFormFieldBinder',
+    metaDataName: 'displaySecured',
+
+    applyMetaData: function (formField, metaValue, model, fieldName) {
+        if (formField.inputEl && formField.inputEl.dom) {
+            if (metaValue === true) {
+                formField.__originalInputElType = formField.inputEl.dom.type;
+                formField.inputEl.dom.type = 'password';
+            } else if (metaValue === false && formField.__originalInputElType && formField.inputEl.dom.type === 'password') {
+                formField.inputEl.dom.type = formField.__originalInputElType;
+            }
+        }
+    },
+
+    isApplicable: function (control) {
+        var me = this;
+        return me.callParent(arguments) && (control instanceof Ext.form.field.Text);
+    }
+});
+
+//https://github.com/slimjack/ExtJs-AsyncModel
+
+Ext.define('Ext.ux.binder.TextFieldMaskReBinder', {
+    extend: 'Ext.ux.binder.AbstractFormFieldBinder',
+    metaDataName: 'maskRe',
+
+    applyMetaData: function (formField, metaValue, model, fieldName) {
+        var me = this;
+        if (metaValue !== null && metaValue !== undefined) {
+            formField.setMaskRe(metaValue);
+        }
+    },
+
+    isApplicable: function (control) {
+        var me = this;
+        return me.callParent(arguments) && (control instanceof Ext.form.field.Text);
+    }
+});
+//https://github.com/slimjack/ExtJs-AsyncModel
+
+Ext.define('Ext.ux.binder.TextFieldMaxLengthBinder', {
+    extend: 'Ext.ux.binder.AbstractFormFieldBinder',
+    metaDataName: 'maxLength',
+
+    applyMetaData: function (formField, metaValue, model, fieldName) {
+        var me = this;
+        if (metaValue !== null && metaValue !== undefined) {
+            formField.setMaxLength(metaValue);
+        }
+    },
+
+    isApplicable: function (control) {
+        var me = this;
+        return me.callParent(arguments) && (control instanceof Ext.form.field.Text);
+    }
+});
+
+//https://github.com/slimjack/ExtJs-AsyncModel
+
+Ext.defineInterface('IGridMetaDataBinder', {
+    inherit: 'ISingleton',
+    methods: [
+        'onInit',
+        'onDestroy',
+        'onRender'
+    ]
+});
+//https://github.com/slimjack/ExtJs-AsyncModel
+
+Ext.define('Ext.ux.binder.GridDesiredBinder', {
+    implement: 'IGridMetaDataBinder',
+    desiredCellCls: 'desiredGridCell',
+
+    onInit: function (grid, plugin) { },
+    onDestroy: function (grid, plugin) { },
+
+    onRender: function (metadata, record, rowIndex, colIndex, store, view) {
+        var dataIndex = metadata.column.dataIndex;
+
+        if (record.getMetaValue(dataIndex, 'desired') && !record.getMetaValue(dataIndex, 'readOnly')) {
+            metadata.tdCls += ' ' + this.desiredCellCls;
+        }
+    }
+
+});
+
+//https://github.com/slimjack/ExtJs-AsyncModel
+
+Ext.define('Ext.ux.binder.GridReadOnlyBinder', {
+    implement: 'IGridMetaDataBinder',
+
+    onInit: function (grid, plugin) {
+        var me = this;
+        grid.on('beforeedit', me.onBeforeCellEdit);
+    },
+
+    onDestroy: function (grid, plugin) {
+        var me = this;
+        grid.un('beforeedit', me.onBeforeCellEdit);
+    },
+
+    onRender: function (metadata, record, rowIndex, colIndex, store, view) { },
+
+    onBeforeCellEdit: function (plugin, context) {
+        var isEditable = !context.record.getMetaValue(context.column.dataIndex, 'readOnly');
+        return isEditable;
+    }
+
+});
+
+//https://github.com/slimjack/ExtJs-AsyncModel
+
+Ext.define('Ext.ux.binder.GridRequiredBinder', {
+    implement: 'IGridMetaDataBinder',
+    requiredCellCls: 'requiredGridCell',
+
+    onInit: function (grid, plugin) { },
+    onDestroy: function (grid, plugin) { },
+
+    onRender: function (metadata, record, rowIndex, colIndex, store, view) {
+        var dataIndex = metadata.column.dataIndex;
+
+        if (record.getMetaValue(dataIndex, 'required') && !record.getMetaValue(dataIndex, 'readOnly')) {
+            metadata.tdCls += ' ' + this.requiredCellCls;
+        }
+    }
+
+});
+
+//https://github.com/slimjack/ExtJs-AsyncModel
+
+Ext.define('Ext.ux.binder.GridValidationBinder', {
+    implement: 'IGridMetaDataBinder',
+    invalidCellCls: 'invalidGridCell',
+
+    onInit: function (grid, plugin) { },
+    onDestroy: function (grid, plugin) { },
+
+    onRender: function (metadata, record, rowIndex, colIndex, store, view) {
+        var dataIndex = metadata.column.validationDataIndex || metadata.column.dataIndex;
+        var validationErrorMessages = record.getMetaValue(dataIndex, 'validationErrorMessages');
+        if (validationErrorMessages.length) {
+            metadata.tdCls += ' ' + this.invalidCellCls;
+            metadata.tdAttr = 'data-errorqtip="' + validationErrorMessages.join('</br>') + '"';
+        } else {
+            metadata.tdAttr = 'data-errorqtip=""';
         }
     }
 });

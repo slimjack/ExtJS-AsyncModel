@@ -24,6 +24,10 @@
     background-color: #F0E0A3 !important;
 }
 
+.desiredGridCell {
+    background-color: #a3eef0 !important;
+}
+
 .requiredField input[type="text"], .requiredField input[type="password"], .requiredField .x-form-checkboxgroup-body, .requiredField>.x-panel-body, .requiredField.x-container
 {
     background-image: none;

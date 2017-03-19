@@ -1,12 +1,12 @@
 ﻿//https://github.com/slimjack/ExtJs-AsyncModel
 
-Ext.define('Ext.data.validator.Required', {
-    extend: 'Ext.data.validator.ParametrizedValidator',
+Ext.define('Ext.ux.data.validator.Required', {
+    extend: 'Ext.ux.data.validator.ParametrizedValidator',
     alias: 'data.validator.required',
     type: 'required',
     config: {
-        autoTrim: true,
-        requiredMessage: 'This is a required field'
+        trimStrings: true,
+        errorMessageTpl: AsyncModelTexts.requiredFieldMessageTpl
     },
 
     getValue: function (fieldValue) {
@@ -14,19 +14,22 @@ Ext.define('Ext.data.validator.Required', {
         if (fieldValue instanceof Ext.data.Store) {
             return fieldValue.count();
         }
+        if (Ext.isArray(fieldValue)) {
+            return fieldValue.length;
+        }
         var stringified = String(fieldValue);
-        if (me.getAutoTrim()) {
+        if (me.getTrimStrings()) {
             stringified = Ext.String.trim(stringified);
         }
         return stringified.length;
     },
 
-    validate: function (fieldValue) {
+    isValid: function (fieldValue, modelRecord) {
         var me = this;
-        if (fieldValue === undefined || fieldValue === null || !me.getValue(fieldValue)) {
-            return me.getRequiredMessage();
-        }
-        return true;
+        var isValueEmpty = fieldValue === undefined
+            || fieldValue === null
+            || !me.getValue(fieldValue);
+        return !isValueEmpty;
     },
 
     validateWithOptions: function (fieldValue, modelRecord, options) {
@@ -34,6 +37,9 @@ Ext.define('Ext.data.validator.Required', {
         if (options.validatePresence) {
             return me.callParent(arguments);
         }
-        return true;
+        return {
+            errorMessage: '',
+            infoMessage: ''
+        };
     }
 });

@@ -3,7 +3,7 @@
 Ext.define('Ext.ux.binder.AbstractFormFieldBinder', {
     implement: 'IMetaDataBinder',
     abstractClass: true,
-    
+
     getMetaDataName: function () {
         if (!this.metaDataName) {
             Ext.Error.raise('metaDataName not defined');
@@ -11,8 +11,15 @@ Ext.define('Ext.ux.binder.AbstractFormFieldBinder', {
         return this.metaDataName;
     },
 
-    onComponentBound: function (formField, model, modelFieldName) {},
-    
+    getListenedMetaDataNames: function () {
+        if (!this.metaDataName) {
+            Ext.Error.raise('metaDataName not defined');
+        }
+        return [this.metaDataName];
+    },
+
+    onComponentBound: function (formField, model, modelFieldName) { },
+
     onComponentUnbound: function (formField) { },
 
     isApplicable: function (control) {
@@ -21,9 +28,10 @@ Ext.define('Ext.ux.binder.AbstractFormFieldBinder', {
 
     applyMetaData: function (control, metaValue, model, fieldName) { },
 
-    applyPlugin: function (formField, ptype) {
+    applyPlugin: function (formField, plugin) {
+        var ptype = Ext.isString(plugin) ? plugin : plugin.ptype;
         if (!formField.findPlugin(ptype)) {
-            formField.addPlugin(ptype);
+            formField.addPlugin(plugin);
         }
     }
 });

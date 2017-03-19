@@ -11,7 +11,10 @@ Ext.define('Ext.ux.plugin.MetaDataBinding', {
 
     init: function (owner) {
         var me = this;
-        me._formFields = new DynamicComponentQuery(owner, '[isFormField]:not([excludeForm])');
+        owner._metaDataBindable = true;
+        me._formFields = new DynamicComponentQuery(owner,
+            '[isFormField]:not([excludeForm]):not([bindMeta=false])',//query form fields which doesn't reject meta data binding
+            '[_metaDataBindable] [isFormField]');//exclude form fields which are placed in container with 'metadatabinding' plugin applied
         me._metaDataBinders = Ext.ux.util.Lookup.fromArray(me.metaDataBinders, function (binder) { return binder.getMetaDataName(); });
         me._modelBindingCallbacks = new Ext.ux.util.Lookup();
         me._modelBinds = {};
@@ -32,7 +35,7 @@ Ext.define('Ext.ux.plugin.MetaDataBinding', {
     bindComponent: function (component) {
         var me = this;
         var bind = component.getBind();
-        if (bind && bind.value) {
+        if (bind && bind.value && component.bindMeta !== false) {
             var fieldPath = bind.value.stub.path;
             var fieldPathParts = fieldPath.split(me.pathDelimiter);
             if (fieldPathParts.length < 2) {
@@ -51,7 +54,7 @@ Ext.define('Ext.ux.plugin.MetaDataBinding', {
                     var modelBindDescriptor = '{' + modelPath + '}';
                     me._modelBinds[modelPath] = viewModel.bind(modelBindDescriptor, function (modelInstance) {
                         if (modelInstance) {
-                            me._modelBindingCallbacks.eachForKey(modelPath, function(callback) { callback(modelInstance); });
+                            me._modelBindingCallbacks.eachForKey(modelPath, function (callback) { callback(modelInstance); });
                             me._modelBindingCallbacks.removeKey(modelPath);
                             me._modelBinds[modelPath].destroy();
                         }
@@ -69,7 +72,7 @@ Ext.define('Ext.ux.plugin.MetaDataBinding', {
     unbindComponent: function (component) {
         var me = this;
         if (component._metaBinds) {
-            Ext.Array.forEach(component._metaBinds, function(metaBind) {
+            Ext.Array.forEach(component._metaBinds, function (metaBind) {
                 metaBind.bind.destroy();
                 metaBind.binder.onComponentUnbound(component);
             });
@@ -80,15 +83,18 @@ Ext.define('Ext.ux.plugin.MetaDataBinding', {
         var me = this;
         if (modelInstance instanceof Ext.ux.data.AsyncModel) {
             var viewModel = component.lookupViewModel();
-            var metaNames = modelInstance.getMetaDataNames();
+            var metaNames = modelInstance.getMetaDataNames(fieldName);
+            if (Ext.isObject(component.bindMeta)) {
+                metaNames = Ext.Array.filter(metaNames, function (metaName) { return !!component.bindMeta[metaName]; });
+            }
             var metaVMBinds = [];
             Ext.Array.forEach(metaNames, function (metaName) {
-                var metaPath = metaBasePath + me.pathDelimiter + metaName;
                 var metaBinder = me.getMetaDataBinder(component, metaName);
                 if (metaBinder) {
-                    var bindDescriptor = '{' + metaPath + '}';
                     metaBinder.onComponentBound(component, modelInstance, fieldName);
                     metaBinder.applyMetaData(component, modelInstance.getMetaValue(fieldName, metaName), modelInstance, fieldName);
+                    var metaPath = metaBasePath + me.pathDelimiter + metaName;
+                    var bindDescriptor = '{' + metaPath + '}';
                     var metaVMBind = viewModel.bind(bindDescriptor, function (metaValue) {
                         metaBinder.applyMetaData(component, metaValue, modelInstance, fieldName);
                     });
@@ -117,4 +123,3 @@ Ext.define('Ext.ux.plugin.MetaDataBinding', {
         return result;
     }
 });
-

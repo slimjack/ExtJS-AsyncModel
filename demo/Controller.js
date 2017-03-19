@@ -1,5 +1,5 @@
 ﻿Ext.define('demo.Controller', {
-    extend: 'Deft.mvc.ViewController',
+    extend: 'Ext.ux.util.DynamicViewController',
     alias: 'controller.demo',
 
     onBindModelClick: function () {

@@ -4,6 +4,8 @@
     fields: [
         { name: 'field1', type: 'string', required: true, requiredMessage: 'Required field' },
         { name: 'field2', type: 'string', required: true },
+        { name: 'field4', type: 'email', desired: true },
+        { name: 'field5', type: 'string', desired: true, email: true },
         { name: 'nested', reference: 'demo.NestedModel', unique: true },
         { name: 'field3', type: 'bool', defaultValue: false }
     ],
