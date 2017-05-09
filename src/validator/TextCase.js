@@ -1,38 +1,85 @@
 ﻿//https://github.com/slimjack/ExtJs-AsyncModel
 
-ValidatorRegistry.register('textCase', function (fieldConfig) {
-    var fieldName = fieldConfig.name;
-    return new Ext.data.validator.Validator(function (value, record) {
-        if (Ext.isString(value) && fieldConfig.validateTrimmed) {
-            value = Ext.String.trim(value);
+Ext.define('Ext.ux.data.validator.TextCase', {
+    implement: 'Ext.ux.validator.ISyncValidator',
+    extend: 'Ext.data.validator.Validator',
+    alias: 'data.validator.textcase',
+    type: 'textcase',
+
+    config: {
+        validateTrimmed: true,
+        upperCaseMessageTpl: AsyncModelTexts.onlyUpperCaseAllowedTpl,
+        lowerCaseMessageTpl: AsyncModelTexts.onlyLowerCaseAllowedTpl,
+        mixedCaseMessageTpl: AsyncModelTexts.onlyMixedCaseAllowedTpl
+    },
+
+    validResult: {
+        error: '',
+        info: ''
+    },
+
+    errorResult: function (error) {
+        return {
+            error: error,
+            info: ''
+        };
+    },
+
+    applyUpperCaseMessageTpl: function (template) {
+        return new Ext.XTemplate(template);
+    },
+
+    applyLowerCaseMessageTpl: function (template) {
+        return new Ext.XTemplate(template);
+    },
+
+    applyMixedCaseMessageTpl: function (template) {
+        return new Ext.XTemplate(template);
+    },
+
+    validate: function (fieldValue, modelRecord) {
+        var me = this;
+        var errorMessage = me.validateSync(fieldValue, me.fieldName, modelRecord, {}).error;
+        return errorMessage || true;
+    },
+
+    validateSync: function (fieldValue, fieldName, modelRecord, options) {
+        var me = this;
+
+        var textCase = modelRecord.getMetaValue(fieldName, 'textCase');
+        if (!textCase) {
+            return me.validResult;
         }
 
-        if (Ext.isEmpty(value)) {
-            return true;
+        fieldValue = me.getValidateTrimmed() ? Ext.String.trim(fieldValue) : fieldValue;
+        if (!fieldValue) {
+            return me.validResult;
         }
 
-        var textCase = record.getMetaValue(fieldName, 'textCase');
-        var matcher;
-        var messageTpl;
         switch (textCase) {
             case TextCasings.upper:
-                matcher = /^[^a-z]*$/;
-                messageTpl = new Ext.XTemplate(AsyncModelTexts.onlyUpperCaseAllowedTpl);
-                break;
+                return fieldValue === fieldValue.toUpperCase()
+                    ? me.validResult
+                    : me.errorResult(me.getUpperCaseMessageTpl.apply(me.getValidationContext(modelRecord, fieldName)))
             case TextCasings.lower:
-                matcher = /^[^A-Z]*$/;
-                messageTpl = new Ext.XTemplate(AsyncModelTexts.onlyLowerCaseAllowedTpl);
-                break;
+                return fieldValue === fieldValue.toLowerCase()
+                    ? me.validResult
+                    : me.errorResult(me.getLowerCaseMessageTpl.apply(me.getValidationContext(modelRecord, fieldName)))
             case TextCasings.mixed:
-                matcher = /^(?=.*[a-z])(?=.*[A-Z]).+$/;
-                messageTpl = new Ext.XTemplate(AsyncModelTexts.onlyMixedCaseAllowedTpl);
-                break;
-            default: throw "Unsupported text case mode: " + fieldConfig.textCase;
+                return fieldValue !== fieldValue.toLowerCase() && fieldValue !== fieldValue.toUpperCase()
+                    ? me.validResult
+                    : me.errorResult(me.getMixedCaseMessageTpl.apply(me.getValidationContext(modelRecord, fieldName)))
+            default: throw "Unsupported text case mode: " + textCase;
         }
-        if (!matcher.test(value)) {
-            return messageTpl.apply(ValidationContext.create(record, fieldName));
-        } else {
-            return true;
-        }
-    });
+    }
+});
+
+Ext.define('Ext.ux.data.validator.TextCaseValidatorProvider', {
+    extend: 'Ext.ux.data.validator.ValidatorProvider',
+    associatedFieldTypes: ['string'],
+    shareValidatorInstance: true,
+
+    createValidatorInstance: function (fieldDescriptor) {
+        return new Ext.ux.data.validator.TextCase();
+    }
 });

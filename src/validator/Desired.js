@@ -1,20 +1,30 @@
 ﻿//https://github.com/slimjack/ExtJs-AsyncModel
 
 Ext.define('Ext.ux.data.validator.Desired', {
-    extend: 'Ext.ux.data.validator.Required',
+    extend: 'Ext.ux.data.validator.SyncValidator',
     alias: 'data.validator.desired',
     type: 'desired',
+
     config: {
-        trimStrings: true,
-        errorMessage: AsyncModelTexts.desiredField
+        infoMessageTpl: AsyncModelTexts.desiredFieldMessageTpl,
+        trimStrings: true
     },
 
-    validate: function (fieldValue) {
+    validateSync: function (fieldValue, fieldName, modelRecord, options) {
         var me = this;
-        var requiredValidatorResult = me.callParent(arguments);
-        if (Ext.isString(requiredValidatorResult)) {
-            me.setInfoMessage(requiredValidatorResult);
+        var desired = modelRecord.getMetaValue(fieldName, 'desired');
+        if (!desired || !options.validatePresence) {
+            return me.validResult;
         }
-        return true;
+        return me.isEmpty(fieldValue) ? me.infoResult(modelRecord, fieldName) : me.validResult;
+    }
+});
+
+Ext.define('Ext.ux.data.validator.DesiredValidatorProvider', {
+    extend: 'Ext.ux.data.validator.ValidatorProvider',
+    shareValidatorInstance: true,
+
+    createValidatorInstance: function (fieldDescriptor) {
+        return new Ext.ux.data.validator.Desired();
     }
 });

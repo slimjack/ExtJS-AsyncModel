@@ -34,6 +34,11 @@
     background-color: #F0E0A3;
 }
 
+.desiredField input[type="text"], .desiredField input[type="password"], .desiredField .x-form-checkboxgroup-body, .desiredField > .x-panel-body, .desiredField.x-container {
+    background-image: none;
+    background-color: #a3eef0;
+}
+
 .x-form-invalid .x-form-checkboxgroup-body {
     border: 1px solid #FF0000;
 }

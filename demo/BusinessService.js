@@ -1,9 +1,9 @@
 ﻿Ext.define('demo.BusinessService', {
     implement: 'IBusinessService',
     
-    updateField3: function (model, config, value, callback) {
+    updateField3: function (config, value, modelRecord, callback) {
         Ext.defer(function () {
-            model.set('field3', value + ' related ' + config.fieldName);
+            modelRecord.set('field3', value + ' related' + config.fieldName);
             callback();
         }, 1000);
     }

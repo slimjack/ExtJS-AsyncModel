@@ -8,24 +8,12 @@ Ext.define('Ext.ux.data.validator.Registry', {
         this._data = {};
     },
 
-    register: function (fieldAttributeNames, validator, activator, aliases) {
+    register: function (registrationData) {
         var me = this;
-        if (Ext.isObject(fieldAttributeNames)) {
-            validator = fieldAttributeNames.validator;
-            activator = fieldAttributeNames.validator;
-            aliases = fieldAttributeNames.aliases;
-            fieldAttributeNames = fieldAttributeNames.fieldAttributeNames;
-        }
-        if (!fieldAttributeNames) {
-            Ext.Error.raise("'fieldAttributeNames' not specified");
-        }
-        fieldAttributeNames = Ext.Array.from(fieldAttributeNames);
-        var registryRecord = me.createRegistryRecord(validator, activator, fieldAttributeNames);
-        Ext.Array.each(fieldAttributeNames, function (fieldAttributeName) {
-            if (me._data[fieldAttributeName]) {
-                Ext.Error.raise("Validator for '" + fieldAttributeName + "' has been already registered");
-            }
-            me._data[fieldAttributeName] = registryRecord;
+        var registryRecord = me.createRegistryRecord(registrationData);
+        Ext.Array.each(registryRecord.fieldAttributeNames, function (fieldAttributeName) {
+            me._data[fieldAttributeName] = me._data[fieldAttributeName] || [];
+            me._data[fieldAttributeName].push(registryRecord);
         });
     },
 
@@ -56,27 +44,31 @@ Ext.define('Ext.ux.data.validator.Registry', {
     },
 
     //region private methods
-    createRegistryRecord: function (validator, activator, fieldAttributeNames) {
+    createRegistryRecord: function (registrationData) {
         var me = this;
-        if (!validator) {
+        if (!registrationData.fieldAttributeNames) {
+            Ext.Error.raise("'fieldAttributeNames' not specified");
+        }
+        if (!registrationData.validator) {
             Ext.Error.raise("'validator' not specified");
         }
-        activator = activator || me.defaultActivationRule;
         return {
-            aliases: fieldAttributeNames,
+            fieldAttributeNames: Ext.Array.from(registrationData.fieldAttributeNames),
             validator: validator,
-            activator: activator
+            activator: registrationData.activator || me.defaultActivationRule
         };
     },
 
     defaultActivationRule: function (model, fieldName, fieldAttributeName) {
         var fieldMetaDataNames = model.getMetaDataNames(fieldName);
+        var attributeValue;
         if (Ext.Array.contains(fieldMetaDataNames, fieldAttributeName)) {
-            return !!model.getMetaValue(fieldName, fieldAttributeName);
+            attributeValue = model.getMetaValue(fieldName, fieldAttributeName);
         } else {
             var fieldDescriptor = model.getFieldDescriptor(fieldName);
-            return !!fieldDescriptor[fieldAttributeName];
+            attributeValue = fieldDescriptor[fieldAttributeName];
         }
+        return Ext.isDefined(attributeValue) && attributeValue !== null && !!attributeValue;
     }
     //endregion
 

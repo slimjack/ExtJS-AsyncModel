@@ -1,52 +1,28 @@
 ﻿//https://github.com/slimjack/ExtJs-AsyncModel
 
 Ext.define('Ext.ux.data.validator.AsyncValidator', {
-    mixins: [
-        'Ext.mixin.Factoryable'
-    ],
+    implement: 'Ext.ux.validator.IAsyncValidator',
+    extend: 'Ext.data.validator.Validator',
+    alias: 'data.validator.asyncvalidator',
 
-    alias: 'data.async.validator.base', // also configures Factoryable
-
-    isAsyncValidator: true,
-    type: 'base',
-
-    config: {
-        fieldName: ''
-    },
-
-    statics: {
-        all: {},
-
-        register: function (name, cls) {
-            var all = this.all;
-            all[name.toUpperCase()] = all[name.toLowerCase()] = all[name] = cls.prototype;
-        }
-    },
-
-    onClassExtended: function (cls, data) {
-        if (data.type) {
-            Ext.data.validator.AsyncValidator.register(data.type, cls);
-        }
-    },
+    type: 'asyncvalidator',
 
     constructor: function (config) {
         if (typeof config === 'function') {
-            this.fnOnly = true;
-            this.validate = config;
+            this.validateAsync = config;
         } else {
-            this.initConfig(config);
+            this.callParent(arguments);
         }
     },
 
-    validate: function (fieldValue, model, options, callback) {
-        Ext.callback(callback, null, ['', '']);
+    validate: function (fieldValue, modelRecord) {
+        Ext.Error.raise('Synchronous validation cannot be used with "Ext.ux.data.validator.AsyncValidator"');
     },
 
-    getValidationContext: function (record) {
+    validateAsync: Ext.abstractFn(),
+
+    getValidationContext: function (modelRecord, validatedFieldName) {
         var me = this;
-        return ValidationContext.create(modelRecord, me.getFieldName());
+        return ValidationContext.create(modelRecord, validatedFieldName);
     }
-},
-    function () {
-        this.register(this.prototype.type, this);
-    });
+});

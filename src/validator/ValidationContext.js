@@ -1,16 +1,18 @@
 ﻿//https://github.com/slimjack/ExtJs-AsyncModel
 
-Ext.define('Ext.ux.data.validator.Context', {
+Ext.define('Ext.ux.data.validator.ValidationContext', {
     alternateClassName: 'ValidationContext',
     statics: {
         getFieldDisplayName: function (modelRecord, validatedFieldName) {
             var me = this;
-            return modelRecord.getMetaValue(me.getFieldName(), 'displayName') || validatedFieldName;
+            return modelRecord.getMetaValue(validatedFieldName, 'displayName') || validatedFieldName;
         },
 
         create: function (modelRecord, validatedFieldName, additionalContext) {
             var result = {
-                fieldName: this.getFieldDisplayName(record, validatedFieldName),
+                fieldName: (modelRecord instanceof Ext.ux.data.AsyncModel) && validatedFieldName
+                    ? this.getFieldDisplayName(modelRecord, validatedFieldName)
+                    : validatedFieldName,
             };
             if (additionalContext) {
                 Ext.apply(result, additionalContext);

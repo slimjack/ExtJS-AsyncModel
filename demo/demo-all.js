@@ -7,9 +7,9 @@ Ext.defineInterface('IBusinessService', {
 Ext.define('demo.BusinessService', {
     implement: 'IBusinessService',
     
-    updateField3: function (model, config, value, callback) {
+    updateField3: function (config, value, modelRecord, callback) {
         Ext.defer(function () {
-            model.set('field3', value + ' related ' + config.fieldName);
+            modelRecord.set('field3', value + ' related' + config.fieldName);
             callback();
         }, 1000);
     }
@@ -60,7 +60,7 @@ Ext.define('demo.StoreModel', {
     fields: [
         { name: 'field1', type: 'string', required: true, requiredMessage: 'Required field' },
         { name: 'field2', type: 'string', required: true },
-        { name: 'field3', type: 'string', storeUnique: true }
+        { name: 'field3', type: 'string', storeUnique: true, desired: true }
     ],
 
     businessRules: {

@@ -188,7 +188,7 @@ Ext.define('Ext.ux.data.AsyncModel', {
 
     initFieldValidationRules: function (fieldName) {
         var me = this;
-        var rules = me.createFieldAutomaticValidationRules(fieldName);
+        var rules = me.createImplicitValidationRules(fieldName);
         var ruleDefinitions = Ext.Array.from(me.validationRules[fieldName]);
         Ext.Array.each(ruleDefinitions, function (ruleDefinition) {
             rules.push(me.createValidationRule(ruleDefinition, fieldName));
@@ -767,7 +767,7 @@ Ext.define('Ext.ux.data.AsyncModel', {
         if (me._businessRules[businessRuleName]) {
             me.callBusinessRuleFn(function (model, callback) {
                 var rule = me._businessRules[businessRuleName];
-                rule.fn.call(rule.fn.scope, me.getFieldValue(fieldName), me, callback);
+                rule.fn.call(rule.scope, me.getFieldValue(fieldName), me, callback);
             });
         }
     },
@@ -780,7 +780,7 @@ Ext.define('Ext.ux.data.AsyncModel', {
     //endregion
 
     //region creating mapped rules
-    createFieldAutomaticValidationRules: function (fieldName) {
+    createImplicitValidationRules: function (fieldName) {
         var me = this;
         var result = [];
         var fieldDescriptor = me.getFieldDescriptor(fieldName);
@@ -790,7 +790,7 @@ Ext.define('Ext.ux.data.AsyncModel', {
             if (Ext.Array.contains(processedDescriptors, validatorDescriptor)) { return; }//this is to avoid creation of the same validator by alias
 
             if (Ext.Array.contains(fieldMetaDataNames, fieldAttributeName) || validatorDescriptor.activator(me, fieldDescriptor.name, fieldAttributeName)) {
-                var rule = me.createAutomaticValidationRule(fieldDescriptor, validatorDescriptor, fieldAttributeName);
+                var rule = me.createImplicitValidationRule(fieldDescriptor, validatorDescriptor, fieldAttributeName);
                 processedDescriptors.push(validatorDescriptor);
                 result.push(rule);
             }
@@ -798,7 +798,7 @@ Ext.define('Ext.ux.data.AsyncModel', {
         return result;
     },
 
-    createAutomaticValidationRule: function (fieldDescriptor, validatorDescriptor, fieldAttributeName) {
+    createImplicitValidationRule: function (fieldDescriptor, validatorDescriptor, fieldAttributeName) {
         var me = this;
         var ruleConfig = validatorDescriptor.validator;
         if (Ext.isString(ruleConfig)) {
@@ -1076,7 +1076,7 @@ Ext.define('Ext.ux.data.AsyncModel', {
         if (me.editing) {
             me._modifiedNestedFieldNames.push(options.fieldName);
         } else {
-            me.afterEdit([options.fieldName]);
+            me.callJoined('afterEdit', [[options.fieldName]]);
         }
     },
 
@@ -1095,7 +1095,7 @@ Ext.define('Ext.ux.data.AsyncModel', {
                 if (me.editing) {
                     me._modifiedNestedFieldNames.push(options.fieldName);
                 } else {
-                    me.afterEdit([options.fieldName]);
+                    me.callJoined('afterEdit', [[options.fieldName]]);
                 }
                 break;
         }
@@ -1129,7 +1129,7 @@ Ext.define('Ext.ux.data.AsyncModel', {
         if (me.editing) {
             me._modifiedNestedFieldNames.push(options.fieldName);
         } else {
-            me.afterEdit([options.fieldName]);
+            me.callJoined('afterEdit', [[options.fieldName]]);
         }
     },
 

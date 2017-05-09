@@ -5,7 +5,7 @@
       "src/Texts.js",
       "src/Overrides.js",
 
-      "src/validator/Context.js",
+      "src/validator/ValidationContext.js",
       "src/validator/Registry.js",
       "src/validator/AsyncValidator.js",
       "src/validator/ParametrizedValidator.js",

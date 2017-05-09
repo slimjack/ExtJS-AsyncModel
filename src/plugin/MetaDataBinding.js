@@ -15,7 +15,7 @@ Ext.define('Ext.ux.plugin.MetaDataBinding', {
         me._formFields = new DynamicComponentQuery(owner,
             '[isFormField]:not([excludeForm]):not([bindMeta=false])',//query form fields which doesn't reject meta data binding
             '[_metaDataBindable] [isFormField]');//exclude form fields which are placed in container with 'metadatabinding' plugin applied
-        me._metaDataBinders = Ext.ux.util.Lookup.fromArray(me.metaDataBinders, function (binder) { return binder.getMetaDataName(); });
+        me._metaDataBinders = Ext.ux.util.Lookup.fromArray(me.metaDataBinders, function (binder) { return binder.metaDataName(); });
         me._modelBindingCallbacks = new Ext.ux.util.Lookup();
         me._modelBinds = {};
         me._formFields.every(function (component) {

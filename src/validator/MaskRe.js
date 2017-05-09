@@ -1,39 +1,39 @@
 ﻿//https://github.com/slimjack/ExtJs-AsyncModel
 
 Ext.define('Ext.ux.data.validator.MaskRe', {
-    extend: 'Ext.ux.data.validator.ParametrizedValidator',
+    extend: 'Ext.ux.data.validator.SyncValidator',
     alias: 'data.validator.maskre',
     type: 'maskre',
+
     config: {
-        validateTrimmed: false,
-        ignoreEmpty: false,
+        validateTrimmed: true,
         errorMessageTpl: AsyncModelTexts.forbiddenSymbols
     },
 
-    isValid: function (fieldValue, modelRecord) {
+    isValid: function (fieldValue, fieldName, modelRecord, options) {
         var me = this;
-        var maskRe = modelRecord.getMetaValue(me.getFieldName(), 'maskRe');
-        var isValid = true;
-        fieldValue = Ext.isString(fieldValue) && me.getValidateTrimmed() ? Ext.String.trim(fieldValue) : fieldValue;
-        if (Ext.isString(fieldValue)
-            && (!Ext.isEmpty(fieldValue) || !me.getIgnoreEmpty())
-            && maskRe) {
+        var maskRe = modelRecord.getMetaValue(fieldName, 'maskRe');
+        if (!maskRe) {
+            return true;
+        }
+        fieldValue = me.getValidateTrimmed() ? Ext.String.trim(fieldValue) : fieldValue;
+        if (fieldValue) {
             for (var i = 0; i < fieldValue.length; i++) {
                 if (!maskRe.test(fieldValue[i])) {
-                    isValid = false;
-                    break;
+                    return false;
                 }
             }
         }
-        return isValid;
+        return true;
     }
 });
 
-ValidatorRegistry.register('maskRe', function (fieldConfig) {
-    return new Ext.ux.data.validator.MaskRe({
-        errorMessageTpl: fieldConfig.maskReMesage,
-        fieldName: fieldConfig.name,
-        ignoreEmpty: true,
-        validateTrimmed: fieldConfig.validateTrimmed
-    });
+Ext.define('Ext.ux.data.validator.MaskReValidatorProvider', {
+    extend: 'Ext.ux.data.validator.ValidatorProvider',
+    associatedFieldTypes: ['string'],
+    shareValidatorInstance: true,
+
+    createValidatorInstance: function (fieldDescriptor) {
+        return new Ext.ux.data.validator.MaskRe();
+    }
 });

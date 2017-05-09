@@ -1,45 +1,43 @@
 ﻿//https://github.com/slimjack/ExtJs-AsyncModel
 
 Ext.define('Ext.ux.data.validator.Required', {
-    extend: 'Ext.ux.data.validator.ParametrizedValidator',
+    extend: 'Ext.ux.data.validator.SyncValidator',
     alias: 'data.validator.required',
     type: 'required',
+
     config: {
-        trimStrings: true,
-        errorMessageTpl: AsyncModelTexts.requiredFieldMessageTpl
+        errorMessageTpl: AsyncModelTexts.requiredFieldMessageTpl,
+        trimStrings: true
     },
 
-    getValue: function (fieldValue) {
+    isValid: function (fieldValue, fieldName, modelRecord, options) {
         var me = this;
+        var required = modelRecord.getMetaValue(fieldName, 'required');
+        if (!required || !options.validatePresence) {
+            return true;
+        }
+        return me.isEmpty(fieldValue);
+    },
+
+    isEmpty: function (fieldValue) {
+        if (!fieldValue) {
+            return true;
+        }
         if (fieldValue instanceof Ext.data.Store) {
-            return fieldValue.count();
+            return !fieldValue.count();
         }
         if (Ext.isArray(fieldValue)) {
-            return fieldValue.length;
+            return !fieldValue.length;
         }
-        var stringified = String(fieldValue);
-        if (me.getTrimStrings()) {
-            stringified = Ext.String.trim(stringified);
-        }
-        return stringified.length;
-    },
+        return false;
+    }
+});
 
-    isValid: function (fieldValue, modelRecord) {
-        var me = this;
-        var isValueEmpty = fieldValue === undefined
-            || fieldValue === null
-            || !me.getValue(fieldValue);
-        return !isValueEmpty;
-    },
+Ext.define('Ext.ux.data.validator.RequiredValidatorProvider', {
+    extend: 'Ext.ux.data.validator.ValidatorProvider',
+    shareValidatorInstance: true,
 
-    validateWithOptions: function (fieldValue, modelRecord, options) {
-        var me = this;
-        if (options.validatePresence) {
-            return me.callParent(arguments);
-        }
-        return {
-            errorMessage: '',
-            infoMessage: ''
-        };
+    createValidatorInstance: function (fieldDescriptor) {
+        return new Ext.ux.data.validator.Required();
     }
 });
