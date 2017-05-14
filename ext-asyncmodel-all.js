@@ -800,8 +800,6 @@ Ext.define('Ext.ux.data.AsyncModel', {
     _suppressValidityReset: 0,
     _suppressValidChangeEvent: 0,
     _suppressChangeEvent: 0,
-    _errorMessage: '',
-    _infoMessage: '',
     _stateCounter: 0,
     _metaDataStateCounter: 0,
 
@@ -817,15 +815,14 @@ Ext.define('Ext.ux.data.AsyncModel', {
         me.validationRules = me.validationRules || {};
         me.businessRules = me.businessRules || {};
         //TODO CHECK
-        options = options || {};
-        options.eagerNetsedInstantiation = true;
+        options = options || { eagerNetsedInstantiation: true };
         me._ignoredFieldNames = [];
         me._modifiedNestedFieldNames = [];
         me._businessLogicSyncCallbacks = [];
 
         me._suppressValidityReset++;
         me.callParent(arguments);
-        me.initFields(options ? options.eagerNetsedInstantiation : false);
+        me.initFields(options.eagerNetsedInstantiation);
         me.initMetaData();
         me.initBusinessRules();
         me.initValidationState();
@@ -855,14 +852,14 @@ Ext.define('Ext.ux.data.AsyncModel', {
         if (data) {
             me.initData();
         }
-        if (options && options.applyNested) {
+        if (options.applyNested) {
             me.loadData(initialData);
         }
     },
 
     initData: function () {
         var me = this;
-        var fieldNames = Ext.Array.map(me._fieldDescriptors, function (fieldDescriptor) { return fieldDescriptor.name; });
+        var fieldNames = Ext.Array.map(me.getFieldsDescriptors(), function (fieldDescriptor) { return fieldDescriptor.name; });
         Ext.Object.each(me.data, function (dataFieldName) {
             if (!Ext.Array.contains(fieldNames, dataFieldName)) {
                 delete me.data[dataFieldName];
@@ -926,7 +923,7 @@ Ext.define('Ext.ux.data.AsyncModel', {
         var me = this;
         me._validationState = {};
         me._validationRules = {};
-        Ext.Array.forEach(me._fieldDescriptors, function (field) {
+        Ext.Array.forEach(me.getFieldsDescriptors(), function (field) {
             me._validationState[field.name] = {
                 callbacks: []
             };
@@ -963,7 +960,7 @@ Ext.define('Ext.ux.data.AsyncModel', {
         var me = this;
         me._businessRuleCompletedCallback = Ext.bind(me.onBusinessRuleCompleted, me);
         me._businessRules = {};
-        Ext.Array.forEach(me._fieldDescriptors, function (field) {
+        Ext.Array.forEach(me.getFieldsDescriptors(), function (field) {
             var changeRuleName = field.name + 'Change';
             var changeRule = me.businessRules[changeRuleName];
             if (changeRule) {
@@ -991,8 +988,8 @@ Ext.define('Ext.ux.data.AsyncModel', {
 
     syncWithBusinessRules: function (callback) {
         var me = this;
-        me._businessRulesSyncCounter += me._fieldDescriptors.length;
-        Ext.Array.forEach(me._fieldDescriptors, function (field) {
+        me._businessRulesSyncCounter += me.getFieldsDescriptors().length;
+        Ext.Array.forEach(me.getFieldsDescriptors(), function (field) {
             if ((field.isStoreField || field.isModelField) && field.instance()) {
                 field.instance().syncWithBusinessRules(me._businessRuleCompletedCallback);
             } else {
@@ -1028,7 +1025,7 @@ Ext.define('Ext.ux.data.AsyncModel', {
                 me.clearAllFields();
             }
             me.beginEdit();
-            Ext.Array.forEach(me._fieldDescriptors, function (field) {
+            Ext.Array.forEach(me.getFieldsDescriptors(), function (field) {
                 if (field.isStoreField) {
                     var instance = field.instance();
                     if (data[field.name] && instance) {
@@ -1168,7 +1165,6 @@ Ext.define('Ext.ux.data.AsyncModel', {
         var me = this;
         if (fieldName !== me.idProperty) {
             var field = me.getFieldDescriptor(fieldName);
-            var fieldValidationState = me._validationState[fieldName];
             return {
                 validationErrorMessages: me.getMetaValue(fieldName, 'validationErrorMessages'),
                 validationInfoMessages: me.getMetaValue(fieldName, 'validationInfoMessages'),
@@ -1201,8 +1197,8 @@ Ext.define('Ext.ux.data.AsyncModel', {
         me.afterValidated([fieldName]);
         if (!errorMessages.length
             && !me._suppressValidChangeEvent
-            && !me.isEqual(fieldValidationState.lastValidValue, me.get(fieldName), fieldName)) {
-            fieldValidationState.lastValidValue = me.get(fieldName);
+            && !me.isFieldStateEqual(fieldName, fieldValidationState.lastValidState)) {
+            fieldValidationState.lastValidState = me.getFieldState(fieldName);
             me.onValidChange(fieldName);
         }
     },
@@ -1226,10 +1222,13 @@ Ext.define('Ext.ux.data.AsyncModel', {
 
     onModelChange: function (modifiedFieldNames) {
         var me = this;
-        me.incrementStateCounter();
         if (modifiedFieldNames) {
-            modifiedFieldNames = modifiedFieldNames.filter(function (fieldName) { return fieldName !== 'meta' });
+            modifiedFieldNames = modifiedFieldNames.filter(function (fieldName) { debugger; return fieldName !== 'meta'; });
         }
+        if (!modifiedFieldNames) {
+            return;
+        }
+        me.incrementStateCounter();
         Ext.each(modifiedFieldNames, function (fieldName) {
             if (!me._suppressBusinessLogic) {
                 me.runBusinessRule(fieldName, 'Change');
@@ -1346,6 +1345,27 @@ Ext.define('Ext.ux.data.AsyncModel', {
     //endregion
 
     //region Private methods
+    isFieldStateEqual: function (fieldName, stateToCompare) {
+        var me = this;
+        var fieldDescriptor = me.getFieldDescriptor(fieldName);
+        if (fieldDescriptor.isModelField || fieldDescriptor.isStoreField) {
+            var currentState = fieldDescriptor.instance() ? fieldDescriptor.instance().getStateCounter() : null;
+            return currentState == stateToCompare;
+        } else {
+            return me.isEqual(stateToCompare, me.get(fieldName), fieldName);
+        }
+    },
+
+    getFieldState: function (fieldName) {
+        var me = this;
+        var fieldDescriptor = me.getFieldDescriptor(fieldName);
+        if (fieldDescriptor.isModelField || fieldDescriptor.isStoreField) {
+            return fieldDescriptor.instance() ? fieldDescriptor.instance().getStateCounter() : null;
+        } else {
+            return me.get(fieldName);
+        }
+    },
+
     incrementStateCounter: function () {
         var me = this;
         me._stateCounter++;
@@ -1373,8 +1393,8 @@ Ext.define('Ext.ux.data.AsyncModel', {
 
     getFieldValue: function (fieldName) {
         var me = this;
-        var field = me.getFieldDescriptor(fieldName);
-        if (field && (field.isStoreField || field.isModelField)) {
+        var fieldDescriptor = me.getFieldDescriptor(fieldName);
+        if (fieldDescriptor.isModelField || fieldDescriptor.isStoreField) {
             return field.instance();
         } else {
             return me.get(fieldName);
@@ -1386,12 +1406,10 @@ Ext.define('Ext.ux.data.AsyncModel', {
     resetFieldValidation: function (fieldName) {
         var me = this;
         var fieldValidationState = me._validationState[fieldName];
-        fieldValidationState.isValidating = false;
-        fieldValidationState.isValidated = true;
-        fieldValidationState.lastValidatingOptions = '{}';
-        fieldValidationState.fieldState = 0;
-        fieldValidationState.lastValidValue = me.get(fieldName);
-        Ext.Array.erase(fieldValidationState.callbacks, 0, fieldValidationState.callbacks.length);
+        fieldValidationState.lastValidation = null;
+        fieldValidationState.lastValidationStateSnapshot = null;
+        fieldValidationState.lastValidationOptionsSnapshot = null;
+        fieldValidationState.lastValidState = me.getFieldState(fieldName);
         me._suppressValidChangeEvent = true;
         me.resetValidationMessages(fieldName);
         me.onFieldValidated(fieldName);
@@ -1513,10 +1531,10 @@ Ext.define('Ext.ux.data.AsyncModel', {
             return;
         }
         var fieldValidationState = me._validationState[fieldName];
-        fieldValidationState.fieldState++;
-        fieldValidationState.isValidated = false;
-        fieldValidationState.isValidating = false;
-        me.validateField(fieldName, null);
+        fieldValidationState.lastValidation = null;
+        fieldValidationState.lastValidationStateSnapshot = null;
+        fieldValidationState.lastValidationOptionsSnapshot = null;
+        me.validateField(fieldName);
     },
     //endregion
 
@@ -1591,7 +1609,7 @@ Ext.define('Ext.ux.data.AsyncModel', {
     getDefaultData: function (excludedFields) {
         var me = this;
         var result = {};
-        Ext.Array.forEach(me._fieldDescriptors, function (field) {
+        Ext.Array.forEach(me.getFieldsDescriptors(), function (field) {
             if (!excludedFields || !Ext.Array.contains(excludedFields, field.name)) {
                 result[field.name] = me.getDefaultFieldValue(field.name);
             }
@@ -1634,7 +1652,7 @@ Ext.define('Ext.ux.data.AsyncModel', {
     clearAllFields: function (excludedFields) {
         var me = this;
         me.beginEdit();
-        Ext.Array.forEach(me._fieldDescriptors, function (field) {
+        Ext.Array.forEach(me.getFieldsDescriptors(), function (field) {
             if (!excludedFields || !Ext.Array.contains(excludedFields, field.name)) {
                 me.clearField(field.name);
             }
@@ -1644,12 +1662,9 @@ Ext.define('Ext.ux.data.AsyncModel', {
 
     clearField: function (fieldName) {
         var me = this;
-        var field = me.getFieldDescriptor(fieldName);
-        if (field.isModelField || field.isStoreField) {
-            var fieldValue = me.getFieldValue(fieldName);
-            if (fieldValue) {
-                fieldValue.clear();
-            }
+        var fieldDescriptor = me.getFieldDescriptor(fieldName);
+        if ((fieldDescriptor.isModelField || fieldDescriptor.isStoreField) && fieldDescriptor.instance()) {
+            fieldDescriptor.instance().clear();
             return;
         }
         me.set(fieldName, me.getDefaultFieldValue(fieldName));
@@ -1657,12 +1672,12 @@ Ext.define('Ext.ux.data.AsyncModel', {
 
     getNumOfFields: function () {
         var me = this;
-        return me._fieldDescriptors.length;
+        return me.getFieldsDescriptors().length;
     },
 
     getNumOfComplexFields: function () {
         var me = this;
-        return Ext.Array.filter(me._fieldDescriptors, function (field) { return field.isStoreField || field.isModelField; }).length;
+        return Ext.Array.filter(me.getFieldsDescriptors(), function (fieldDescriptor) { return fieldDescriptor.isStoreField || fieldDescriptor.isModelField; }).length;
     },
 
     fireChangeEvent: function (modifiedFieldNames) {
@@ -1711,8 +1726,8 @@ Ext.define('Ext.ux.data.AsyncModel', {
 
     setValidationMessages: function (fieldName, errorMessages, infoMessages) {
         var me = this;
-        me.setMetaInternal(fieldName, 'validationInfoMessages', infoMessages || [], true);
-        me.setMetaInternal(fieldName, 'validationErrorMessages', errorMessages || [], true);
+        me.setMetaInternal(fieldName, 'validationInfoMessages', Ext.Array.from(infoMessages), true);
+        me.setMetaInternal(fieldName, 'validationErrorMessages', Ext.Array.from(errorMessages), true);
     },
 
     resetValidationMessages: function (fieldName) {
@@ -1753,18 +1768,7 @@ Ext.define('Ext.ux.data.AsyncModel', {
 
     getFieldDescriptor: function (fieldName) {
         var me = this;
-        return Ext.Array.findBy(me._fieldDescriptors, function (f) { return f.name === fieldName; });
-    },
-
-    getStuckValidations: function () {
-        var me = this;
-        var stuck = [];
-        Ext.Object.each(me._validationState, function (fieldName, validationInfo) {
-            if (validationInfo.callbacks.length) {
-                stuck.push(fieldName);
-            }
-        });
-        return stuck;
+        return Ext.Array.findBy(me.getFieldsDescriptors(), function (f) { return f.name === fieldName; });
     },
     //endregion
 
@@ -1799,22 +1803,6 @@ Ext.define('Ext.ux.data.AsyncModel', {
                 businessRules = Ext.merge(businessRules, businessRulesDefs);
             }
             cls._businessRules = proto._businessRules = businessRules;
-        },
-
-        initValidatorsMap: function (data, cls, proto) {
-            var validatorsMap = {};
-            if (proto._validatorsMap) {
-                var superValidatorsMap = proto._validatorsMap;
-                delete proto._validatorsMap;
-                validatorsMap = Ext.merge(validatorsMap, superValidatorsMap);
-            }
-
-            if (data._validatorsMap) {
-                var validatorsMapDefs = data._validatorsMap;
-                delete data._validatorsMap;
-                validatorsMap = Ext.merge(validatorsMap, validatorsMapDefs);
-            }
-            cls._validatorsMap = proto._validatorsMap = validatorsMap;
         }
     }
 },
@@ -1826,7 +1814,6 @@ Ext.define('Ext.ux.data.AsyncModel', {
 
             Model.initValidationRules(data, cls, proto);
             Model.initBusinessRules(data, cls, proto);
-            Model.initValidatorsMap(data, cls, proto);
         });
     });
 
@@ -1843,7 +1830,6 @@ Ext.define('Ext.ux.data.AsyncStore', {
         decorate: function (store) {
             Ext.override(store, {
                 isAsyncStore: true,
-                _validationCallbacks: [],
                 _businessLogicSyncCallbacks: [],
                 _stateCounter: 0,
 

@@ -6,7 +6,6 @@ Ext.define('Ext.ux.data.AsyncStore', {
         decorate: function (store) {
             Ext.override(store, {
                 isAsyncStore: true,
-                _validationCallbacks: [],
                 _businessLogicSyncCallbacks: [],
                 _stateCounter: 0,
 
