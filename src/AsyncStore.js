@@ -8,8 +8,14 @@ Ext.define('Ext.ux.data.AsyncStore', {
                 isAsyncStore: true,
                 _validationCallbacks: [],
                 _businessLogicSyncCallbacks: [],
+                _stateCounter: 0,
 
                 //region Public methods
+                getStateCounter: function () {
+                    var me = this;
+                    return me._stateCounter;
+                },
+
                 applyModelConfig: function (config) {
                     var me = this;
                     me._modelConfig = config;
@@ -168,9 +174,17 @@ Ext.define('Ext.ux.data.AsyncStore', {
 
                 afterValidChange: function (record, modifiedFieldNames) {
                     this.getData().itemChanged(record, modifiedFieldNames || null, undefined, Ext.data.Model.VALIDCHANGE);
+                },
+
+                incrementStateCounter: function () {
+                    var me = this;
+                    me._stateCounter++;
                 }
                 //endregion
             });
+
+            store.on('update', store.incrementStateCounter, store)
+            store.on('datachanged', store.incrementStateCounter, store)
         }
     }
 });
