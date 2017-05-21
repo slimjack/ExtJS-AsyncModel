@@ -20,7 +20,7 @@
     },
 
     onValidateClick: function () {
-        this.model.validate({ validatePresence: true });
+        this.model.validate({ validatePresence: true }).then(function (result) { alert(result.errors.join(';')); });
     },
 
     onField1RequiredChange: function (ctrl, value) {

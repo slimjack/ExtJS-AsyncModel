@@ -20,7 +20,7 @@ Ext.define('Ext.ux.data.validator.SyncValidator', {
 
     errorResult: function (modelRecord, fieldName) {
         return {
-            error: me.getErrorMessageTpl().apply(me.getValidationContext(modelRecord, fieldName)),
+            error: this.getErrorMessageTpl().apply(this.getValidationContext(modelRecord, fieldName)),
             info: ''
         };
     },
@@ -28,7 +28,7 @@ Ext.define('Ext.ux.data.validator.SyncValidator', {
     infoResult: function (modelRecord, fieldName) {
         return {
             error: '',
-            info: me.getInfoMessageTpl().apply(me.getValidationContext(modelRecord, fieldName))
+            info: this.getInfoMessageTpl().apply(this.getValidationContext(modelRecord, fieldName))
         };
     },
 

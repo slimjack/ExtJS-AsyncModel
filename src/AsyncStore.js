@@ -8,6 +8,7 @@ Ext.define('Ext.ux.data.AsyncStore', {
                 isAsyncStore: true,
                 _businessLogicSyncCallbacks: [],
                 _stateCounter: 0,
+                _validationStateCounter: 0,
 
                 //region Public methods
                 getStateCounter: function () {
@@ -45,38 +46,42 @@ Ext.define('Ext.ux.data.AsyncStore', {
                     Ext.Array.erase(me._validationCallbacks, 0, me._validationCallbacks.length);
                 },
 
-                validate: function (options, callback) {
+                validate: function (options, originalValidation) {
                     var me = this;
-                    if (callback) {
-                        me._validationCallbacks.push(callback);
-                    }
-                    if (me.isValidating) {
-                        return;
-                    }
-                    var syncCounter = me.count();
-                    var resultErrorMessages = [];
-                    var resultInfoMessages = [];
-                    var recordValidationCallback = function (errorMessages, infoMessages) {
-                        resultErrorMessages = resultErrorMessages.concat(errorMessages);
-                        resultInfoMessages = resultInfoMessages.concat(infoMessages);
-                        syncCounter--;
-                        if (syncCounter === 0) {
-                            me.isValidating = false;
-                            if (me.isValidated()) {
-                                me.onStoreValidated(resultErrorMessages, resultInfoMessages);
-                            } else {
-                                me.validate(options);
-                            }
+                    options = options || {};
+
+                    var currentValidationStateCounter = me._validationStateCounter;
+                    var currentValidationOptionsSnapshot = JSON.stringify(options);
+                    var newValidation = currentValidationStateCounter !== me._lastValidationStateCounter
+                        || currentValidationOptionsSnapshot !== me._lastValidationOptionsSnapshot;
+                    if (newValidation) {
+                        if (!originalValidation) {
+                            me._lastValidationOptionsSnapshot = currentValidationOptionsSnapshot;
+                            originalValidation = new Ext.Deferred();
+                            me._lastValidation = originalValidation;
                         }
-                    };
-                    if (syncCounter) {
-                        me.isValidating = true;
-                        me.each(function (record) {
-                            record.validate(options, recordValidationCallback);
+                        me.syncWithBusinessRules(function () {
+                            var recordValidations = [];
+                            me.each(function (record) {
+                                recordValidations.push(record.validate(options));
+                            });
+                            Ext.Promise.all(recordValidations).then(function (validationResults) {
+                                if (currentValidationStateCounter === me._validationStateCounter) {
+                                    if (currentValidationOptionsSnapshot === me._lastValidationOptionsSnapshot) {
+                                        me._lastValidationStateCounter = currentValidationStateCounter;
+                                    }
+                                    originalValidation.resolve({
+                                        errors: Ext.Array.flatten(Ext.Array.map(validationResults, function (validationResult) { return validationResult.errors; })),
+                                        infos: Ext.Array.flatten(Ext.Array.map(validationResults, function (validationResult) { return validationResult.infos; }))
+                                    });
+                                } else {
+                                    me.validate(options, originalValidation);
+                                }
+                            });
                         });
-                    } else {
-                        me.onStoreValidated(resultErrorMessages, resultInfoMessages);
+                        return originalValidation.promise;
                     }
+                    return me._lastValidation.promise;
                 },
 
                 resetMetaData: function () {
@@ -91,31 +96,14 @@ Ext.define('Ext.ux.data.AsyncStore', {
                     me.each(function (record) {
                         record.resetValidation();
                     });
-                    Ext.Array.erase(me._validationCallbacks, 0, me._validationCallbacks.length);
+                    delete me._lastValidation;
+                    delete me._lastValidationStateCounter;
+                    delete me._lastValidationOptionsSnapshot;
                 },
 
-                isValidated: function () {
+                isValid: function (options) {
                     var me = this;
-                    var isValidated = true;
-                    me.each(function (record) {
-                        isValidated = record.isValidated();
-                        if (!isValidated) {
-                            return false;
-                        }
-                    });
-                    return isValidated;
-                },
-
-                isValid: function () {
-                    var me = this;
-                    var isValid = true;
-                    me.each(function (record) {
-                        isValid = record.isValid();
-                        if (!isValid) {
-                            return false;
-                        }
-                    });
-                    return isValid;
+                    return me.validate(options).then(function (validationResult) { return !validationResult.errors; })
                 },
 
                 getAllValidationInfo: function () {
@@ -146,12 +134,15 @@ Ext.define('Ext.ux.data.AsyncStore', {
                     Ext.Array.erase(me._businessLogicSyncCallbacks, 0, me._businessLogicSyncCallbacks.length);
                 },
 
-                onStoreValidated: function (resultErrorMessages, resultInfoMessages) {
+                onStoreUpdated: function () {
                     var me = this;
-                    Ext.each(me._validationCallbacks, function (validationCallback) {
-                        validationCallback(resultErrorMessages, resultInfoMessages);
-                    });
-                    Ext.Array.erase(me._validationCallbacks, 0, me._validationCallbacks.length);
+                    me._stateCounter++;
+                    me._validationStateCounter++;
+                },
+
+                onStoreDataChanged: function () {
+                    var me = this;
+                    me._stateCounter++;
                 },
                 //endregion
 
@@ -173,17 +164,12 @@ Ext.define('Ext.ux.data.AsyncStore', {
 
                 afterValidChange: function (record, modifiedFieldNames) {
                     this.getData().itemChanged(record, modifiedFieldNames || null, undefined, Ext.data.Model.VALIDCHANGE);
-                },
-
-                incrementStateCounter: function () {
-                    var me = this;
-                    me._stateCounter++;
                 }
                 //endregion
             });
 
-            store.on('update', store.incrementStateCounter, store)
-            store.on('datachanged', store.incrementStateCounter, store)
+            store.on('update', store.onStoreUpdated, store)
+            store.on('datachanged', store.onStoreDataChanged, store)
         }
     }
 });

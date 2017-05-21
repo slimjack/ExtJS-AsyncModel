@@ -16,7 +16,7 @@ Ext.define('Ext.ux.data.validator.Required', {
         if (!required || !options.validatePresence) {
             return true;
         }
-        return me.isEmpty(fieldValue);
+        return !me.isEmpty(fieldValue);
     },
 
     isEmpty: function (fieldValue) {

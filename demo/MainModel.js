@@ -1,4 +1,43 @@
-﻿Ext.define('demo.MainModel', {
+﻿var __validators = {
+    validateField1: function (fieldValue, fieldName, model, options) {
+        return new Ext.Promise(function (resolve) {
+            Ext.defer(function () {
+                if (fieldValue === 'badvalue') {
+                    resolve({ error: 'badvalue is invalid', info: '' });
+                } else {
+                    resolve({error: '', info: ''});
+                }
+            }, 2000);
+        });
+    },
+
+    validateField2: function (fieldValue, fieldName, model, options) {
+        return new Ext.Promise(function (resolve) {
+            Ext.defer(function () {
+                if (fieldValue === 'invalidvalue') {
+                    resolve({ error: 'invalidvalue is invalid', info: '' });
+                } else {
+                    resolve({ error: '', info: '' });
+                }
+            }, 2000);
+        });
+    },
+
+    validateField3: function (fieldValue, fieldName, model, options) {
+        return new Ext.Promise(function (resolve) {
+            Ext.defer(function () {
+                if (fieldValue === 'testvalue') {
+                    resolve({ error: 'testvalue is invalid', info: '' });
+                } else {
+                    resolve({ error: '', info: '' });
+                }
+            }, 2000);
+        });
+    }
+};
+
+
+Ext.define('demo.MainModel', {
     extend: 'Ext.ux.data.AsyncModel',
     validateOnMetaDataChange: true,
     fields: [
@@ -17,23 +56,23 @@
     },
 
     businessRules: {
-        field3Change: function(value, callback) {
+        field3Change: function (value, callback) {
             this.setMeta('field2', 'readOnly', value);
             callback();
         }
     },
 
     validationRules: {
-        field1: 'IValidationService.validateField1',
-        field2: [{ type: 'exclusion', list: ['excluded'] }, 'IValidationService.validateField2']
+        field1: new Ext.ux.data.validator.AsyncValidator(__validators.validateField1),
+        field2: [{ type: 'exclusion', list: ['excluded'] }, new Ext.ux.data.validator.AsyncValidator(__validators.validateField2)]
     },
     proxy: {
-        type: 'ajax',
-        url: 'data.json',
-        reader: {
-            type: 'json',
-            rootProperty: 'data'
-        }
+        type: 'memory'
+        //url: 'data.json',
+        //reader: {
+        //    type: 'json',
+        //    rootProperty: 'data'
+        //}
     }
 });
 Ext.define('TestViewModel', {

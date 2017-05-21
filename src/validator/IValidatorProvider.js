@@ -1,4 +1,5 @@
 ﻿Ext.defineInterface('Ext.ux.validator.IValidatorProvider', {
+    inherit: 'ISingleton',
     methods: [
         /**
          * Returns validator for the field if it is applicable.

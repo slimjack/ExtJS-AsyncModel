@@ -14,47 +14,6 @@ Ext.define('demo.BusinessService', {
         }, 1000);
     }
 });
-Ext.defineInterface('IValidationService', {
-    inherit: 'ISingleton',
-    methods: [
-        'validateField1',
-        'validateField2',
-        'validateField3'
-    ]
-});
-Ext.define('demo.ValidationService', {
-    implement: 'IValidationService',
-    
-    validateField1: function (model, config, value, options, callback) {
-        Ext.defer(function() {
-            if (value === 'badvalue') {
-                callback('bad value is invalid');
-            } else {
-                callback('');
-            }
-        }, 2000);
-    },
-
-    validateField2: function (model, config, value, options, callback) {
-        Ext.defer(function () {
-            if (value === 'invalidvalue') {
-                callback('invalidvalue value is invalid');
-            } else {
-                callback('');
-            }
-        }, 2000);
-    },
-
-    validateField3: function (model, config, value, options, callback) {
-        Ext.defer(function () {
-            if (value === 'testvalue') {
-                callback('testvalue value is invalid');
-            } else {
-                callback('');
-            }
-        }, 2000);
-    }
-});
 Ext.define('demo.StoreModel', {
     extend: 'Ext.ux.data.AsyncModel',
     fields: [
@@ -87,6 +46,45 @@ Ext.define('demo.NestedModel', {
         field1: 'email'
     }
 });
+var __validators = {
+    validateField1: function (fieldValue, fieldName, model, options) {
+        return new Ext.Promise(function (resolve) {
+            Ext.defer(function () {
+                if (fieldValue === 'badvalue') {
+                    resolve({ error: 'badvalue is invalid', info: '' });
+                } else {
+                    resolve({error: '', info: ''});
+                }
+            }, 2000);
+        });
+    },
+
+    validateField2: function (fieldValue, fieldName, model, options) {
+        return new Ext.Promise(function (resolve) {
+            Ext.defer(function () {
+                if (fieldValue === 'invalidvalue') {
+                    resolve({ error: 'invalidvalue is invalid', info: '' });
+                } else {
+                    resolve({ error: '', info: '' });
+                }
+            }, 2000);
+        });
+    },
+
+    validateField3: function (fieldValue, fieldName, model, options) {
+        return new Ext.Promise(function (resolve) {
+            Ext.defer(function () {
+                if (fieldValue === 'testvalue') {
+                    resolve({ error: 'testvalue is invalid', info: '' });
+                } else {
+                    resolve({ error: '', info: '' });
+                }
+            }, 2000);
+        });
+    }
+};
+
+
 Ext.define('demo.MainModel', {
     extend: 'Ext.ux.data.AsyncModel',
     validateOnMetaDataChange: true,
@@ -106,23 +104,23 @@ Ext.define('demo.MainModel', {
     },
 
     businessRules: {
-        field3Change: function(value, callback) {
+        field3Change: function (value, callback) {
             this.setMeta('field2', 'readOnly', value);
             callback();
         }
     },
 
     validationRules: {
-        field1: 'IValidationService.validateField1',
-        field2: [{ type: 'exclusion', list: ['excluded'] }, 'IValidationService.validateField2']
+        field1: new Ext.ux.data.validator.AsyncValidator(__validators.validateField1),
+        field2: [{ type: 'exclusion', list: ['excluded'] }, new Ext.ux.data.validator.AsyncValidator(__validators.validateField2)]
     },
     proxy: {
-        type: 'ajax',
-        url: 'data.json',
-        reader: {
-            type: 'json',
-            rootProperty: 'data'
-        }
+        type: 'memory'
+        //url: 'data.json',
+        //reader: {
+        //    type: 'json',
+        //    rootProperty: 'data'
+        //}
     }
 });
 Ext.define('TestViewModel', {
@@ -338,7 +336,7 @@ Ext.define('demo.Controller', {
     },
 
     onValidateClick: function () {
-        this.model.validate({ validatePresence: true });
+        this.model.validate({ validatePresence: true }).then(function (result) { alert(result.errors.join(';')); });
     },
 
     onField1RequiredChange: function (ctrl, value) {

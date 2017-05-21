@@ -2,6 +2,7 @@
 
 Ext.define('Ext.ux.data.validator.ValidatorProvider', {
     implement: 'Ext.ux.validator.IValidatorProvider',
+    abstractClass: true,
 
     associatedFieldProperties: [],
     associatedFieldTypes: [],
@@ -34,11 +35,18 @@ Ext.define('Ext.ux.data.validator.ValidatorProvider', {
         var me = this;
 
         if (!me.shareValidatorInstance) {
-            return me.createValidatorInstance(fieldDescriptor);
+            var validator = me.createValidatorInstance(fieldDescriptor);
+            if (!(validator.$is('Ext.ux.validator.ISyncValidator') || validator.$is('Ext.ux.validator.IAsyncValidator'))) {
+                validator = Ext.ux.data.validator.SyncValidator.from(validator);
+            }
+            return validator;
         }
 
         if (!me._validatorInstance) {
             me._validatorInstance = me.createValidatorInstance(fieldDescriptor);
+            if (!(me._validatorInstance.$is('Ext.ux.validator.ISyncValidator') || me._validatorInstance.$is('Ext.ux.validator.IAsyncValidator'))) {
+                me._validatorInstance = Ext.ux.data.validator.SyncValidator.from(me._validatorInstance);
+            }
         }
 
         return me._validatorInstance;
