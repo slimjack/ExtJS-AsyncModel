@@ -16,16 +16,16 @@ Ext.define('Ext.ux.data.validator.StoreUnique', {
             fieldValue = Ext.String.trim(fieldValue);
         }
 
-        if (Ext.isEmpty(fieldValue) || !modelRecord.store) {
+        if (!modelRecord.store) {
             return true;
         }
 
         var duplicateIndex = modelRecord.store.findBy(function (r) {
             var anotherValue = r.get(fieldName);
-            if (Ext.isString(anotherValue) && modelRecord.store) {
+            if (Ext.isString(anotherValue) && me.getTrimStrings()) {
                 anotherValue = Ext.String.trim(anotherValue);
             }
-            return r !== modelRecord && anotherValue === fieldValue;
+            return r !== modelRecord && modelRecord.isEqual(anotherValue, fieldValue, fieldName);
         });
 
         return duplicateIndex === -1;
@@ -38,6 +38,6 @@ Ext.define('Ext.ux.data.validator.StoreUniqueValidatorProvider', {
     associatedFieldProperties: ['storeUnique'],
 
     createValidatorInstance: function (fieldDescriptor) {
-        return new Ext.ux.data.validator.Required();
+        return new Ext.ux.data.validator.StoreUnique();
     }
 });

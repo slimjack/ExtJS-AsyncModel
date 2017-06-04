@@ -8,19 +8,17 @@
 
 describe('Ext.data.validator.Email', function () {
     describe('Available via IValidatorProvider', function () {
-        var providers = Deft.Injector.resolve('Ext.ux.validator.IValidatorProvider[]');
+        var provider = (new Ext.ux.data.validator.EmailValidatorProvider()).$as('Ext.ux.validator.IValidatorProvider');
         it('If field is of "email" type', function () {
-            var validators = Ext.Array.map(providers, function (p) { return p.getValidator({ type: 'email' }); });
-            validators = Ext.Array.filter(validators, function (v) { return v instanceof Ext.data.validator.Email; });
-            expect(validators.length).toBeGreaterThan(0);
+            var validator = provider.getValidator({ type: 'email' });
+            expect(validator).not.toBeNull();
             it('Implements ISyncValidator.', function () {
-                expect(Ext.Array.every(validators, function (v) { return v.$is('Ext.ux.validator.ISyncValidator'); })).toBe(true);
+                expect(validator.$is('Ext.ux.validator.ISyncValidator')).toBe(true);
             });
         });
         it('For other field types it is not available', function () {
-            var validators = Ext.Array.map(providers, function (p) { return p.getValidator({ }); });
-            validators = Ext.Array.filter(validators, function (v) { return v instanceof Ext.data.validator.Email; });
-            expect(validators.length).toBe(0);
+            var validator = provider.getValidator({});
+            expect(validator).toBeNull();
         });
     });
 
@@ -28,7 +26,7 @@ describe('Ext.data.validator.Email', function () {
         var validator = Ext.ux.data.validator.ValidatorFactory.createValidator({
             type: 'email'
         });
-        expect(validator instanceof Ext.data.validator.Email).toBe(true);
+        expect(validator).not.toBeNull();
         it('Implements ISyncValidator.', function () {
             expect(validator.$is('Ext.ux.validator.ISyncValidator')).toBe(true);
         });
