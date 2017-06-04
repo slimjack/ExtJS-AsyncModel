@@ -7,8 +7,6 @@ Ext.define('Ext.ux.data.validator.DynamicBound', {
     alias: 'data.validator.dynamicbound',
     type: 'dynamicbound',
 
-    fieldName: '',
-
     minBoundMetadataName: 'min',
     maxBoundMetadataName: 'max',
 
@@ -41,18 +39,20 @@ Ext.define('Ext.ux.data.validator.DynamicBound', {
         var errorMessage = '';
 
         var valueToValidate = me.getValueToValidate(fieldValue);
-        if (Ext.isNumber(valueToValidate)) {
+        if (Ext.isNumber(valueToValidate) || valueToValidate === null) {
             var validationContext = me.getValidationContext(record, fieldName);
             if (validationContext.hasMinBound && validationContext.hasMaxBound) {
-                if (valueToValidate < validationContext.min || valueToValidate > validationContext.max) {
+                if (valueToValidate === null
+                    || valueToValidate < validationContext.min
+                    || valueToValidate > validationContext.max) {
                     errorMessage = me.getBothMessageTpl().apply(validationContext);
                 }
             } else if (validationContext.hasMinBound) {
-                if (valueToValidate < validationContext.min) {
+                if (valueToValidate === null || valueToValidate < validationContext.min) {
                     errorMessage = me.getMinOnlyMessageTpl().apply(validationContext);
                 }
             } else if (validationContext.hasMaxBound) {
-                if (valueToValidate > validationContext.max) {
+                if (valueToValidate === null || valueToValidate > validationContext.max) {
                     errorMessage = me.getMaxOnlyMessageTpl().apply(validationContext);
                 }
             }

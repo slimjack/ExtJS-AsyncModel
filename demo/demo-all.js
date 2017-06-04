@@ -17,7 +17,7 @@ Ext.define('demo.BusinessService', {
 Ext.define('demo.StoreModel', {
     extend: 'Ext.ux.data.AsyncModel',
     fields: [
-        { name: 'field1', type: 'string', required: true, requiredMessage: 'Required field' },
+        { name: 'stringField', type: 'string', required: true, requiredMessage: 'Required field' },
         { name: 'field2', type: 'string', required: true },
         { name: 'field3', type: 'string', storeUnique: true, desired: true }
     ],
@@ -33,7 +33,7 @@ Ext.define('demo.StoreModel', {
 Ext.define('demo.NestedModel', {
     extend: 'Ext.ux.data.AsyncModel',
     fields: [
-        { name: 'field1', type: 'string', required: true, requiredMessage: 'Required field' },
+        { name: 'stringField', type: 'string', required: true, requiredMessage: 'Required field' },
         { name: 'field2', type: 'string', required: true },
         { name: 'field3', type: 'string' }
     ],
@@ -89,11 +89,11 @@ Ext.define('demo.MainModel', {
     extend: 'Ext.ux.data.AsyncModel',
     validateOnMetaDataChange: true,
     fields: [
-        { name: 'field1', type: 'string', required: true, requiredMessage: 'Required field' },
+        { name: 'stringField', type: 'string', required: true, requiredMessage: 'Required field' },
         { name: 'field2', type: 'string', required: true },
         { name: 'field4', type: 'email', desired: true },
         { name: 'field5', type: 'string', desired: true, email: true },
-        { name: 'nested', reference: 'demo.NestedModel', unique: true },
+        { name: 'storeField', reference: 'demo.NestedModel', unique: true },
         { name: 'field3', type: 'bool', defaultValue: false }
     ],
 
@@ -153,12 +153,12 @@ Ext.define('demo.DetailsController', {
 
     onField1RequiredChange: function (ctrl, value) {
         var model = this.getViewModel().get('curChild');
-        model.setMetaValue('field1', 'required', value);
+        model.setMetaValue('stringField', 'required', value);
     },
 
     onField1ReadOnlyChange: function (ctrl, value) {
         var model = this.getViewModel().get('curChild');
-        model.setMetaValue('field1', 'readOnly', value);
+        model.setMetaValue('stringField', 'readOnly', value);
     },
 
     onField2RequiredChange: function (ctrl, value) {
@@ -186,10 +186,10 @@ Ext.define('demo.DetailsController', {
         if (!model) {
             return;
         }
-        this.lookupReference('required1').setValue(model.getMetaValue('field1', 'required'));
+        this.lookupReference('required1').setValue(model.getMetaValue('stringField', 'required'));
         this.lookupReference('required2').setValue(model.getMetaValue('field2', 'required'));
         this.lookupReference('required3').setValue(model.getMetaValue('field3', 'required'));
-        this.lookupReference('readOnly1').setValue(model.getMetaValue('field1', 'readOnly'));
+        this.lookupReference('readOnly1').setValue(model.getMetaValue('stringField', 'readOnly'));
         this.lookupReference('readOnly1').setValue(model.getMetaValue('field2', 'readOnly'));
         this.lookupReference('readOnly1').setValue(model.getMetaValue('field3', 'readOnly'));
 
@@ -268,7 +268,7 @@ Ext.define('demo.DetailsPanel', {
         },
         items: [{
             xtype: 'textfield',
-            name: 'field1',
+            name: 'stringField',
             bind: '{curChild.field1}',
             fieldLabel: 'Field 1',
             width: 300
@@ -325,7 +325,7 @@ Ext.define('demo.Controller', {
         this.model.load();
         this.getViewModel().bind('{curChild}', function (v) {
             if (v) {
-                console.log(v.get('field1'));
+                console.log(v.get('stringField'));
             }
         });
         (new DynamicComponentQuery(this.lookupReference('metacontrols'), 'checkbox')).enable();
@@ -340,11 +340,11 @@ Ext.define('demo.Controller', {
     },
 
     onField1RequiredChange: function (ctrl, value) {
-        this.model.setMetaValue('field1', 'required', value);
+        this.model.setMetaValue('stringField', 'required', value);
     },
 
     onField1ReadOnlyChange: function (ctrl, value) {
-        this.model.setMetaValue('field1', 'readOnly', value);
+        this.model.setMetaValue('stringField', 'readOnly', value);
     },
 
     onField2RequiredChange: function (ctrl, value) {
@@ -367,7 +367,7 @@ Ext.define('demo.Grid', {
 
     dockedItems: [{
         xtype: 'textfield',
-        name: 'field1',
+        name: 'stringField',
         bind: '{model.nested.field1}',
         margin: 5,
         fieldLabel: 'Nested Field 1'
@@ -386,8 +386,8 @@ Ext.define('demo.Grid', {
     }],
 
     columns: [{
-        dataIndex: 'field1',
-        text: 'field1',
+        dataIndex: 'stringField',
+        text: 'stringField',
         editor: 'textfield'
     }, {
         dataIndex: 'field2',
@@ -471,7 +471,7 @@ Ext.define('demo.MainPanel', {
         },
         items: [{
             xtype: 'textfield',
-            name: 'field1',
+            name: 'stringField',
             fieldLabel: 'Field 1',
             bind: '{model.field1}',
             width: 300
@@ -539,7 +539,7 @@ Ext.define('demo.MainPanel', {
         },
         items: [{
             xtype: 'textfield',
-            name: 'field1',
+            name: 'stringField',
             bind: '{model.field1}',
             fieldLabel: 'One more field 1',
             width: 300

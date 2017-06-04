@@ -20,15 +20,23 @@ Ext.define('Ext.ux.data.validator.Required', {
     },
 
     isEmpty: function (fieldValue) {
+        var me = this;
         if (!fieldValue) {
             return true;
         }
         if (fieldValue instanceof Ext.data.Store) {
             return !fieldValue.count();
         }
+        if (Ext.isString(fieldValue)) {
+            if (me.getTrimStrings()) {
+                fieldValue = Ext.String.trim(fieldValue);
+            }
+            return !fieldValue.length;
+        }
         if (Ext.isArray(fieldValue)) {
             return !fieldValue.length;
         }
+
         return false;
     }
 });

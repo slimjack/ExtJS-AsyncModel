@@ -70,7 +70,7 @@
         },
         items: [{
             xtype: 'textfield',
-            name: 'field1',
+            name: 'stringField',
             fieldLabel: 'Field 1',
             bind: '{model.field1}',
             width: 300
@@ -138,7 +138,7 @@
         },
         items: [{
             xtype: 'textfield',
-            name: 'field1',
+            name: 'stringField',
             bind: '{model.field1}',
             fieldLabel: 'One more field 1',
             width: 300

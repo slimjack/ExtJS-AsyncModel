@@ -13,9 +13,11 @@ Ext.define('Ext.ux.data.validator.SyncValidator', {
         errorMessageTpl: AsyncModelTexts.invalidValue,
     },
 
-    validResult: {
-        error: '',
-        info: ''
+    validResult: function () {
+        return {
+            error: '',
+            info: ''
+        };
     },
 
     errorResult: function (modelRecord, fieldName) {
@@ -59,7 +61,7 @@ Ext.define('Ext.ux.data.validator.SyncValidator', {
         var me = this;
         return !me.isValid(fieldValue, fieldName, modelRecord, options)
             ? me.errorResult(modelRecord, fieldName)
-            : me.validResult;
+            : me.validResult();
     },
     //endregion
 

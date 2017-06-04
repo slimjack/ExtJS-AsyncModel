@@ -13,7 +13,7 @@
 
     dockedItems: [{
         xtype: 'textfield',
-        name: 'field1',
+        name: 'stringField',
         bind: '{model.nested.field1}',
         margin: 5,
         fieldLabel: 'Nested Field 1'
@@ -32,8 +32,8 @@
     }],
 
     columns: [{
-        dataIndex: 'field1',
-        text: 'field1',
+        dataIndex: 'stringField',
+        text: 'stringField',
         editor: 'textfield'
     }, {
         dataIndex: 'field2',

@@ -9,7 +9,7 @@
         this.model.load();
         this.getViewModel().bind('{curChild}', function (v) {
             if (v) {
-                console.log(v.get('field1'));
+                console.log(v.get('stringField'));
             }
         });
         (new DynamicComponentQuery(this.lookupReference('metacontrols'), 'checkbox')).enable();
@@ -24,11 +24,11 @@
     },
 
     onField1RequiredChange: function (ctrl, value) {
-        this.model.setMetaValue('field1', 'required', value);
+        this.model.setMetaValue('stringField', 'required', value);
     },
 
     onField1ReadOnlyChange: function (ctrl, value) {
-        this.model.setMetaValue('field1', 'readOnly', value);
+        this.model.setMetaValue('stringField', 'readOnly', value);
     },
 
     onField2RequiredChange: function (ctrl, value) {

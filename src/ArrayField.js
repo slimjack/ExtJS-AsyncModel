@@ -11,6 +11,9 @@ Ext.define('Ext.ux.data.field.Array', {
     },
 
     isEqual: function (a, b) {
+        if (!a || !b) {
+            return a === b;
+        }
         return Ext.Array.equals(a, b);
     }
 });

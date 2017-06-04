@@ -7,9 +7,9 @@ Ext.define('Ext.ux.AsyncModel.Texts', {
     requiredFieldMessageTpl: '{fieldName} is a required field',
     desiredFieldMessageTpl: '{fieldName} is a desired field',
     invalidValue: 'Value is invalid',
-    minLengthViolatedTpl: "{fieldName} cannot be less than {min} length",
-    maxLengthViolatedTpl: "{fieldName} cannot be more than {max} length",
-    minMaxLengthViolatedTpl: "{fieldName} must be minimum of {min} and maximum of {max} length",
+    minLengthViolatedTpl: "{fieldName} length cannot be less than {min}",
+    maxLengthViolatedTpl: "{fieldName} length cannot be more than {max}",
+    minMaxLengthViolatedTpl: "{fieldName} length must be in range from {min} to {max}",
     minBoundViolatedTpl: "{fieldName} cannot be less than {min}",
     maxBoundViolatedTpl: "{fieldName} cannot be more than {max}",
     minMaxBoundViolatedTpl: "{fieldName} must be minimum of {min} and maximum of {max}",
@@ -126,9 +126,11 @@ Ext.define('Ext.ux.data.validator.SyncValidator', {
         errorMessageTpl: AsyncModelTexts.invalidValue,
     },
 
-    validResult: {
-        error: '',
-        info: ''
+    validResult: function () {
+        return {
+            error: '',
+            info: ''
+        };
     },
 
     errorResult: function (modelRecord, fieldName) {
@@ -172,7 +174,7 @@ Ext.define('Ext.ux.data.validator.SyncValidator', {
         var me = this;
         return !me.isValid(fieldValue, fieldName, modelRecord, options)
             ? me.errorResult(modelRecord, fieldName)
-            : me.validResult;
+            : me.validResult();
     },
     //endregion
 
@@ -303,8 +305,6 @@ Ext.define('Ext.ux.data.validator.DynamicBound', {
     alias: 'data.validator.dynamicbound',
     type: 'dynamicbound',
 
-    fieldName: '',
-
     minBoundMetadataName: 'min',
     maxBoundMetadataName: 'max',
 
@@ -337,18 +337,20 @@ Ext.define('Ext.ux.data.validator.DynamicBound', {
         var errorMessage = '';
 
         var valueToValidate = me.getValueToValidate(fieldValue);
-        if (Ext.isNumber(valueToValidate)) {
+        if (Ext.isNumber(valueToValidate) || valueToValidate === null) {
             var validationContext = me.getValidationContext(record, fieldName);
             if (validationContext.hasMinBound && validationContext.hasMaxBound) {
-                if (valueToValidate < validationContext.min || valueToValidate > validationContext.max) {
+                if (valueToValidate === null
+                    || valueToValidate < validationContext.min
+                    || valueToValidate > validationContext.max) {
                     errorMessage = me.getBothMessageTpl().apply(validationContext);
                 }
             } else if (validationContext.hasMinBound) {
-                if (valueToValidate < validationContext.min) {
+                if (valueToValidate === null || valueToValidate < validationContext.min) {
                     errorMessage = me.getMinOnlyMessageTpl().apply(validationContext);
                 }
             } else if (validationContext.hasMaxBound) {
-                if (valueToValidate > validationContext.max) {
+                if (valueToValidate === null || valueToValidate > validationContext.max) {
                     errorMessage = me.getMaxOnlyMessageTpl().apply(validationContext);
                 }
             }
@@ -400,8 +402,11 @@ Ext.define('Ext.ux.data.validator.DynamicLength', {
         bothMessageTpl: AsyncModelTexts.minMaxLengthViolatedTpl
     },
 
-    getValue: function (fieldValue) {
+    getValueToValidate: function (fieldValue) {
         var me = this;
+        if (!fieldValue) {
+            return fieldValue;
+        }
         if (fieldValue instanceof Ext.data.Store) {
             return fieldValue.count();
         }
@@ -440,15 +445,23 @@ Ext.define('Ext.ux.data.validator.Required', {
     },
 
     isEmpty: function (fieldValue) {
+        var me = this;
         if (!fieldValue) {
             return true;
         }
         if (fieldValue instanceof Ext.data.Store) {
             return !fieldValue.count();
         }
+        if (Ext.isString(fieldValue)) {
+            if (me.getTrimStrings()) {
+                fieldValue = Ext.String.trim(fieldValue);
+            }
+            return !fieldValue.length;
+        }
         if (Ext.isArray(fieldValue)) {
             return !fieldValue.length;
         }
+
         return false;
     }
 });
@@ -477,9 +490,9 @@ Ext.define('Ext.ux.data.validator.Desired', {
         var me = this;
         var desired = modelRecord.getMetaValue(fieldName, 'desired');
         if (!desired || !options.validatePresence) {
-            return me.validResult;
+            return me.validResult();
         }
-        return me.isEmpty(fieldValue) ? me.infoResult(modelRecord, fieldName) : me.validResult;
+        return me.isEmpty(fieldValue) ? me.infoResult(modelRecord, fieldName) : me.validResult();
     }
 });
 
@@ -506,9 +519,11 @@ Ext.define('Ext.ux.data.validator.TextCase', {
         mixedCaseMessageTpl: AsyncModelTexts.onlyMixedCaseAllowedTpl
     },
 
-    validResult: {
-        error: '',
-        info: ''
+    validResult: function () {
+        return {
+            error: '',
+            info: ''
+        };
     },
 
     errorResult: function (error) {
@@ -918,6 +933,29 @@ Ext.define('Ext.ux.data.StringFieldMetaModel', {
 });
 Ext.ux.data.MetaModel.assignDefaultFieldMetaModel('Ext.ux.data.StringFieldMetaModel', 'string');
 
+//https://github.com/slimjack/ExtJs-AsyncModel
+
+Ext.define('Ext.ux.data.ArrayFieldMetaModel', {
+    extend: 'Ext.ux.data.FieldMetaModel',
+    fields: [
+        { name: 'maxLength', type: 'integer', allowNull: true, defaultValue: null },
+        { name: 'minLength', type: 'integer', allowNull: true, defaultValue: null }
+    ]
+});
+Ext.ux.data.MetaModel.assignDefaultFieldMetaModel('Ext.ux.data.ArrayFieldMetaModel', 'array');
+
+//https://github.com/slimjack/ExtJs-AsyncModel
+
+Ext.define('Ext.ux.data.IntFieldMetaModel', {
+    extend: 'Ext.ux.data.FieldMetaModel',
+    fields: [
+        { name: 'max', type: 'integer', allowNull: true, defaultValue: null },
+        { name: 'min', type: 'integer', allowNull: true, defaultValue: null }
+    ]
+});
+Ext.ux.data.MetaModel.assignDefaultFieldMetaModel('Ext.ux.data.IntFieldMetaModel', 'int');
+Ext.ux.data.MetaModel.assignDefaultFieldMetaModel('Ext.ux.data.IntFieldMetaModel', 'integer');
+
 Ext.override(Ext.data.field.Field, {
     isEqual: function (a, b) {
         var me = this;
@@ -942,6 +980,9 @@ Ext.define('Ext.ux.data.field.Array', {
     },
 
     isEqual: function (a, b) {
+        if (!a || !b) {
+            return a === b;
+        }
         return Ext.Array.equals(a, b);
     }
 });

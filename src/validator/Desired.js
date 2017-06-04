@@ -14,9 +14,9 @@ Ext.define('Ext.ux.data.validator.Desired', {
         var me = this;
         var desired = modelRecord.getMetaValue(fieldName, 'desired');
         if (!desired || !options.validatePresence) {
-            return me.validResult;
+            return me.validResult();
         }
-        return me.isEmpty(fieldValue) ? me.infoResult(modelRecord, fieldName) : me.validResult;
+        return me.isEmpty(fieldValue) ? me.infoResult(modelRecord, fieldName) : me.validResult();
     }
 });
 

@@ -70,7 +70,7 @@
         },
         items: [{
             xtype: 'textfield',
-            name: 'field1',
+            name: 'stringField',
             bind: '{curChild.field1}',
             fieldLabel: 'Field 1',
             width: 300

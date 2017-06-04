@@ -17,12 +17,12 @@
 
     onField1RequiredChange: function (ctrl, value) {
         var model = this.getViewModel().get('curChild');
-        model.setMetaValue('field1', 'required', value);
+        model.setMetaValue('stringField', 'required', value);
     },
 
     onField1ReadOnlyChange: function (ctrl, value) {
         var model = this.getViewModel().get('curChild');
-        model.setMetaValue('field1', 'readOnly', value);
+        model.setMetaValue('stringField', 'readOnly', value);
     },
 
     onField2RequiredChange: function (ctrl, value) {
@@ -50,10 +50,10 @@
         if (!model) {
             return;
         }
-        this.lookupReference('required1').setValue(model.getMetaValue('field1', 'required'));
+        this.lookupReference('required1').setValue(model.getMetaValue('stringField', 'required'));
         this.lookupReference('required2').setValue(model.getMetaValue('field2', 'required'));
         this.lookupReference('required3').setValue(model.getMetaValue('field3', 'required'));
-        this.lookupReference('readOnly1').setValue(model.getMetaValue('field1', 'readOnly'));
+        this.lookupReference('readOnly1').setValue(model.getMetaValue('stringField', 'readOnly'));
         this.lookupReference('readOnly1').setValue(model.getMetaValue('field2', 'readOnly'));
         this.lookupReference('readOnly1').setValue(model.getMetaValue('field3', 'readOnly'));
 

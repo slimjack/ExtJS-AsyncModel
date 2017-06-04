@@ -13,9 +13,11 @@ Ext.define('Ext.ux.data.validator.TextCase', {
         mixedCaseMessageTpl: AsyncModelTexts.onlyMixedCaseAllowedTpl
     },
 
-    validResult: {
-        error: '',
-        info: ''
+    validResult: function () {
+        return {
+            error: '',
+            info: ''
+        };
     },
 
     errorResult: function (error) {

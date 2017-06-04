@@ -26,6 +26,8 @@
       "src/FieldMetaModel.js",
       "src/MetaModel.js",
       "src/StringFieldMetaModel.js",
+      "src/ArrayFieldMetaModel.js",
+      "src/IntFieldMetaModel.js",
       "src/Overrides.js",
 
       "src/ArrayField.js",
@@ -54,8 +56,7 @@
       "src/binder/GridRequiredBinder.js",
       "src/binder/GridValidationBinder.js"
     ]
-  },
-  {
+  }, {
     "outputFileName": "demo/demo-all.js",
     "inputFiles": [
       "demo/IBusinessService.js",

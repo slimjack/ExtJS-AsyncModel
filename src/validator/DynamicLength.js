@@ -14,8 +14,11 @@ Ext.define('Ext.ux.data.validator.DynamicLength', {
         bothMessageTpl: AsyncModelTexts.minMaxLengthViolatedTpl
     },
 
-    getValue: function (fieldValue) {
+    getValueToValidate: function (fieldValue) {
         var me = this;
+        if (!fieldValue) {
+            return fieldValue;
+        }
         if (fieldValue instanceof Ext.data.Store) {
             return fieldValue.count();
         }
