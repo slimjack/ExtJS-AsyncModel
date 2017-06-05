@@ -7,7 +7,6 @@ Ext.define('Ext.ux.data.validator.TextCase', {
     type: 'textcase',
 
     config: {
-        validateTrimmed: true,
         upperCaseMessageTpl: AsyncModelTexts.onlyUpperCaseAllowedTpl,
         lowerCaseMessageTpl: AsyncModelTexts.onlyLowerCaseAllowedTpl,
         mixedCaseMessageTpl: AsyncModelTexts.onlyMixedCaseAllowedTpl
@@ -45,32 +44,36 @@ Ext.define('Ext.ux.data.validator.TextCase', {
         return errorMessage || true;
     },
 
+    getValidationContext: function (modelRecord, validatedFieldName) {
+        var me = this;
+        return ValidationContext.create(modelRecord, validatedFieldName);
+    },
+
     validateSync: function (fieldValue, fieldName, modelRecord, options) {
         var me = this;
 
         var textCase = modelRecord.getMetaValue(fieldName, 'textCase');
         if (!textCase) {
-            return me.validResult;
+            return me.validResult();
         }
 
-        fieldValue = me.getValidateTrimmed() ? Ext.String.trim(fieldValue) : fieldValue;
         if (!fieldValue) {
-            return me.validResult;
+            return me.validResult();
         }
 
         switch (textCase) {
             case TextCasings.upper:
                 return fieldValue === fieldValue.toUpperCase()
-                    ? me.validResult
-                    : me.errorResult(me.getUpperCaseMessageTpl.apply(me.getValidationContext(modelRecord, fieldName)))
+                    ? me.validResult()
+                    : me.errorResult(me.getUpperCaseMessageTpl().apply(me.getValidationContext(modelRecord, fieldName)))
             case TextCasings.lower:
                 return fieldValue === fieldValue.toLowerCase()
-                    ? me.validResult
-                    : me.errorResult(me.getLowerCaseMessageTpl.apply(me.getValidationContext(modelRecord, fieldName)))
+                    ? me.validResult()
+                    : me.errorResult(me.getLowerCaseMessageTpl().apply(me.getValidationContext(modelRecord, fieldName)))
             case TextCasings.mixed:
                 return fieldValue !== fieldValue.toLowerCase() && fieldValue !== fieldValue.toUpperCase()
-                    ? me.validResult
-                    : me.errorResult(me.getMixedCaseMessageTpl.apply(me.getValidationContext(modelRecord, fieldName)))
+                    ? me.validResult()
+                    : me.errorResult(me.getMixedCaseMessageTpl().apply(me.getValidationContext(modelRecord, fieldName)))
             default: throw "Unsupported text case mode: " + textCase;
         }
     }

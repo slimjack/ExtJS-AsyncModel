@@ -43,7 +43,7 @@ Ext.define('Ext.ux.data.AsyncStore', {
                 clear: function () {
                     var me = this;
                     me.removeAll();
-                    Ext.Array.erase(me._validationCallbacks, 0, me._validationCallbacks.length);
+                    me.resetValidation();
                 },
 
                 validate: function (options, originalValidation) {
