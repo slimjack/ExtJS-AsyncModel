@@ -114,13 +114,30 @@ describe('Ext.ux.data.AsyncModel', function () {
                     nestedStoreField: []
                 }]
             };
+            beforeEach(function (done) { done(); });
             it('Sets data', function () {
                 var testModelRecord = new Ext.ux.data.AsyncModel.TestModel();
+                spyOn(testModelRecord._metaModel, 'reset');
                 testModelRecord.loadData(data);
+                expect(testModelRecord._metaModel.reset).toHaveBeenCalled();
                 var actualData = testModelRecord.getData(true);
                 expect(actualData).toEqual(data);
                 expect(testModelRecord.get('arrayField')).toEqual(data.arrayField);
                 expect(testModelRecord.storeField().getAt(0).get('nestedField')).toEqual(data.storeField[0].nestedField);
+                done();
+            });
+            it('Resets metadata', function () {
+                var testModelRecord = new Ext.ux.data.AsyncModel.TestModel();
+                spyOn(testModelRecord._metaModel, 'reset');
+                testModelRecord.loadData(data);
+                expect(testModelRecord._metaModel.reset).toHaveBeenCalled();
+                done();
+            });
+            it('Executes after all business rules are completed', function (done) {
+                var testModelRecord = new Ext.ux.data.AsyncModel.TestModel();
+                spyOn(testModelRecord._metaModel, 'reset');
+                testModelRecord.loadData(data);
+                expect(testModelRecord._metaModel.reset).toHaveBeenCalled();
             });
         });
     });

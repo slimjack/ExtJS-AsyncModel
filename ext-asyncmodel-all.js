@@ -446,6 +446,10 @@ Ext.define('Ext.ux.data.validator.Required', {
 
     isEmpty: function (fieldValue) {
         var me = this;
+        if (fieldValue === false) {
+            //for boolean type only null is treated as empty
+            return false;
+        }
         if (!fieldValue) {
             return true;
         }

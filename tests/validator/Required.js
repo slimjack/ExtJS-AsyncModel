@@ -10,6 +10,7 @@ Ext.define('Ext.ux.data.validator.Required.TestModel', {
     extend: 'Ext.ux.data.AsyncModel',
     fields: [
         { name: 'stringField', type: 'string', required: true, allowNull: true },
+        { name: 'boolField', type: 'boolean', required: true, allowNull: true },
         { name: 'arrayField', type: 'array', required: true, allowNull: true }
     ],
 
@@ -65,7 +66,7 @@ describe('Ext.ux.data.validator.Required', function () {
         var storeFieldErrorMessage = (new Ext.XTemplate(AsyncModelTexts.requiredFieldMessageTpl))
             .apply(ValidationContext.create(new Ext.ux.data.validator.Required.TestModel(), 'storeField'));
 
-        it('Returns error message for null value.', function () {
+        it('Returns error message for null value', function () {
             var validator = new Ext.ux.data.validator.Required();
             var testModelRecord = new Ext.ux.data.validator.Required.TestModel();
             testModelRecord.set('stringField', null);
@@ -76,7 +77,18 @@ describe('Ext.ux.data.validator.Required', function () {
             });
         });
 
-        it('Returns error message for empty string value.', function () {
+        it('Returns no error message for false boolean value', function () {
+            var validator = new Ext.ux.data.validator.Required();
+            var testModelRecord = new Ext.ux.data.validator.Required.TestModel();
+            testModelRecord.set('boolField', false);
+            var validationResult = validator.validateSync(testModelRecord.get('boolField'), 'boolField', testModelRecord, { validatePresence: true });
+            expect(validationResult).toEqual({
+                error: '',
+                info: ''
+            });
+        });
+
+        it('Returns error message for empty string value', function () {
             var validator = new Ext.ux.data.validator.Required();
             var testModelRecord = new Ext.ux.data.validator.Required.TestModel();
             testModelRecord.set('stringField', '');
@@ -87,7 +99,7 @@ describe('Ext.ux.data.validator.Required', function () {
             });
         });
 
-        it('Returns no error message for non-empty string value.', function () {
+        it('Returns no error message for non-empty string value', function () {
             var validator = new Ext.ux.data.validator.Required();
             var testModelRecord = new Ext.ux.data.validator.Required.TestModel();
             testModelRecord.set('stringField', 'v');
@@ -98,7 +110,7 @@ describe('Ext.ux.data.validator.Required', function () {
             });
         });
 
-        it('Returns error message for empty store value.', function () {
+        it('Returns error message for empty store value', function () {
             var validator = new Ext.ux.data.validator.Required();
             var testModelRecord = new Ext.ux.data.validator.Required.TestModel();
             var validationResult = validator.validateSync(testModelRecord.storeField(), 'storeField', testModelRecord, { validatePresence: true });
@@ -108,7 +120,7 @@ describe('Ext.ux.data.validator.Required', function () {
             });
         });
 
-        it('Returns no error message for non-empty store value.', function () {
+        it('Returns no error message for non-empty store value', function () {
             var validator = new Ext.ux.data.validator.Required();
             var testModelRecord = new Ext.ux.data.validator.Required.TestModel();
             testModelRecord.storeField().add({ nestedField: 'nested value' });
@@ -119,7 +131,7 @@ describe('Ext.ux.data.validator.Required', function () {
             });
         });
 
-        it('Returns error message for empty array value.', function () {
+        it('Returns error message for empty array value', function () {
             var validator = new Ext.ux.data.validator.Required();
             var testModelRecord = new Ext.ux.data.validator.Required.TestModel();
             testModelRecord.set('arrayField', []);
@@ -130,7 +142,7 @@ describe('Ext.ux.data.validator.Required', function () {
             });
         });
 
-        it('Returns no error message for non-empty array value.', function () {
+        it('Returns no error message for non-empty array value', function () {
             var validator = new Ext.ux.data.validator.Required();
             var testModelRecord = new Ext.ux.data.validator.Required.TestModel();
             testModelRecord.set('arrayField', [1]);
@@ -141,7 +153,7 @@ describe('Ext.ux.data.validator.Required', function () {
             });
         });
 
-        it('Validates only if field is "required".', function () {
+        it('Validates only if field is "required"', function () {
             var validator = new Ext.ux.data.validator.Required();
             var testModelRecord = new Ext.ux.data.validator.Required.TestModel();
             testModelRecord.setMetaValue('stringField', 'required', false);
@@ -152,7 +164,7 @@ describe('Ext.ux.data.validator.Required', function () {
             });
         });
 
-        it('Validates only if "validatePresence" validation option is set.', function () {
+        it('Validates only if "validatePresence" validation option is set', function () {
             var validator = new Ext.ux.data.validator.Required();
             var testModelRecord = new Ext.ux.data.validator.Required.TestModel();
             var validationResult = validator.validateSync('', 'stringField', testModelRecord, { validatePresence: false });
@@ -162,7 +174,7 @@ describe('Ext.ux.data.validator.Required', function () {
             });
         });
 
-        it('Trims string value before validation if "trimStrings" config is set.', function () {
+        it('Trims string value before validation if "trimStrings" config is set', function () {
             var validator = new Ext.ux.data.validator.Required();
             var testModelRecord = new Ext.ux.data.validator.Required.TestModel();
             var validationResult = validator.validateSync('   ', 'stringField', testModelRecord, { validatePresence: true });
